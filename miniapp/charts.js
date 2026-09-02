@@ -1,10 +1,55 @@
 import { deltaHistogram, toLine } from "./money.js";
 
 function css(name, fallback) {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    fallback
+  return toChartColor(
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
+    fallback,
   );
+}
+
+/** lightweight-charts 4.x не парсить hsla()/hsl(). */
+export function toChartColor(raw, fallback) {
+  const c = String(raw || "").trim();
+  if (!c) return fallback;
+  const hsl = parseHsl(c);
+  if (hsl) return rgbaString(hslToRgb(hsl.h, hsl.s, hsl.l), hsl.a);
+  return c;
+}
+
+function parseHsl(input) {
+  const m = input.match(
+    /^hsla?\(\s*([\d.]+)(?:deg)?\s*[, ]\s*([\d.]+)%\s*[, ]\s*([\d.]+)%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i,
+  );
+  if (!m) return null;
+  const aRaw = m[4];
+  let a = 1;
+  if (aRaw != null) a = aRaw.endsWith("%") ? Number(aRaw.slice(0, -1)) / 100 : Number(aRaw);
+  return { h: Number(m[1]), s: Number(m[2]) / 100, l: Number(m[3]) / 100, a };
+}
+
+function hslToRgb(h, s, l) {
+  const hue = ((h % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hue < 60) [r, g, b] = [c, x, 0];
+  else if (hue < 120) [r, g, b] = [x, c, 0];
+  else if (hue < 180) [r, g, b] = [0, c, x];
+  else if (hue < 240) [r, g, b] = [0, x, c];
+  else if (hue < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255),
+  };
+}
+
+function rgbaString({ r, g, b }, a) {
+  return a >= 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 function palette() {
@@ -70,7 +115,15 @@ export function createPane(
   el.replaceChildren();
   const LWC = window.LightweightCharts;
   const p = palette();
-  const chart = LWC.createChart(el, chartOptions());
+  let chart;
+  try {
+    chart = LWC.createChart(el, chartOptions());
+  } catch (err) {
+    console.error(err);
+    el.replaceChildren();
+    el.textContent = "Графік не вдалося намалювати";
+    return null;
+  }
   const favor = addFavorSeries(chart);
   const up = invertColors ? p.down : p.up;
   const down = invertColors ? p.up : p.down;

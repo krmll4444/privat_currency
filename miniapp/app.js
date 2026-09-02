@@ -60,8 +60,10 @@ function applyTheme() {
   const theme = resolvedTheme();
   document.documentElement.dataset.theme = theme;
   const bg = theme === "dark" ? "#15191a" : "#f0f3f4";
-  tg?.setHeaderColor?.("#4ea524");
-  tg?.setBackgroundColor?.(bg);
+  if (tg?.isVersionAtLeast?.("6.1")) {
+    tg.setHeaderColor?.("#4ea524");
+    tg.setBackgroundColor?.(bg);
+  }
 }
 
 function persist() {

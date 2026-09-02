@@ -31,9 +31,9 @@ html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #15191a;
   --card: #1e2527;
-  --text: hsla(0, 0%, 100%, 0.96);
-  --muted: hsla(0, 0%, 100%, 0.54);
-  --line: hsla(0, 0%, 100%, 0.15);
+  --text: rgba(255, 255, 255, 0.96);
+  --muted: rgba(255, 255, 255, 0.54);
+  --line: rgba(255, 255, 255, 0.15);
   --green: #4ea524;
   --green-hover: #53b125;
   --green-pressed: #499b22;
@@ -50,7 +50,7 @@ html[data-theme="dark"] {
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   --tone-sell: rgba(78, 165, 36, 0.22);
   --tone-buy: rgba(0, 143, 254, 0.2);
-  --tone-wait: hsla(0, 0%, 100%, 0.06);
+  --tone-wait: rgba(255, 255, 255, 0.06);
 }
 
 * {
