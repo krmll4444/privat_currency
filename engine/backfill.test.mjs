@@ -43,7 +43,7 @@ test("картковий EUR = ФОП sale × націнка з latest", () => {
   });
   assert.ok(markup.eurSale > 1.003 && markup.eurSale < 1.004);
 
-  const snap = snapshotFromHistoryDay(
+  const estimated = snapshotFromHistoryDay(
     "01-07-2026",
     {
       USD: { buy: 41.4, sale: 41.9, nbu: 41.5 },
@@ -51,9 +51,30 @@ test("картковий EUR = ФОП sale × націнка з latest", () => {
     },
     { markup, thresholdPct: -1 },
   );
+  assert.equal(estimated.p24Estimated, true);
+  assert.ok(Math.abs(estimated.p24.EUR.sale - 48.7 * markup.eurSale) < 1e-4);
+
+  const snap = snapshotFromHistoryDay(
+    "01-07-2026",
+    {
+      USD: { buy: 41.4, sale: 41.9, nbu: 41.5 },
+      EUR: { buy: 48.0, sale: 48.7, nbu: 48.2 },
+    },
+    {
+      markup,
+      thresholdPct: -1,
+      minfin: {
+        card: { USD: { buy: 41.2, sale: 41.8 }, EUR: { buy: 47.9, sale: 49.1 } },
+        cash: { USD: { buy: 41.1, sale: 41.7 }, EUR: { buy: 47.8, sale: 48.9 } },
+      },
+    },
+  );
   assert.equal(snap.backfill, true);
+  assert.equal(snap.p24Estimated, false);
   assert.equal(snap.ts, otp24DateToIso("01-07-2026"));
-  assert.ok(Math.abs(snap.p24.EUR.sale - 48.7 * markup.eurSale) < 1e-4);
+  assert.equal(snap.p24.EUR.sale, 49.1);
+  assert.equal(snap.p24.source, "minfin-card");
+  assert.equal(snap.marketCash.EUR.sale, 48.9);
   assert.equal(snap.business.USD.buy, 41.4);
   assert.ok(snap.spread.edgePct != null);
 });

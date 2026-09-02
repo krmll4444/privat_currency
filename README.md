@@ -69,7 +69,7 @@ npm run preview        # http://127.0.0.1:8080
 
 `--dry-run` пише `data/latest.json` і `data/history.jsonl`, але не шле Telegram.
 
-`npm run backfill` підтягує архів ФОП otp24 за 90 днів і дописує денні рядки в `history.jsonl` (картковий EUR оцінюється націнкою з `latest.json`). Живі cron-рядки не затирає.
+`npm run backfill` підтягує архів ФОП otp24 і денні курси Приват24 з [Minfin](https://index.minfin.com.ua/ua/exchange/archive/privat/) (картка + каса). Живі cron-рядки не затирає.
 
 ## Структура
 

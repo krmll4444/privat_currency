@@ -179,9 +179,12 @@ export function analyze(rows, latest) {
   const eurRank = percentileRank(nowEur, eur);
   const notes = [];
 
-  if (rows.some((r) => r.backfill || r.p24Estimated)) {
+  if (rows.some((r) => r.backfill)) {
+    const estimated = rows.filter((r) => r.p24Estimated).length;
     notes.push(
-      "USD ФОП — з архіву otp24 (робочі дні). Карткового архіву P24 немає, тож EUR sale оцінений: курс ФОП × поточна націнка картки.",
+      estimated
+        ? `Бекфіл: USD ФОП з otp24, картка P24 з архіву Minfin. ${estimated} днів без картки — оцінка націнкою.`
+        : "Бекфіл: USD ФОП з otp24 (робочі дні), картковий EUR — з архіву Minfin (курс Приват24).",
     );
   }
 

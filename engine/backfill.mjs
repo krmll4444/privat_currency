@@ -1,4 +1,5 @@
 import { computeSpread, round, snapshotRates } from "./calc.mjs";
+import { fetchMinfinPrivatRange } from "./minfin.mjs";
 import { fetchBusinessHistory, uaDate } from "./sources.mjs";
 import { latestPath, readHistory, readJson, writeHistory } from "./store.mjs";
 import { fileURLToPath } from "node:url";
@@ -10,9 +11,13 @@ function argValue(name, fallback) {
   return process.argv[i + 1];
 }
 
-export function otp24DateToIso(dateStr) {
+export function otp24DateToYmd(dateStr) {
   const [dd, mm, yyyy] = String(dateStr).split("-");
-  return `${yyyy}-${mm}-${dd}T10:00:00.000Z`;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function otp24DateToIso(dateStr) {
+  return `${otp24DateToYmd(dateStr)}T10:00:00.000Z`;
 }
 
 export function kyivDay(iso) {
@@ -47,7 +52,7 @@ export function mergeHistory(existing, backfill) {
   return [...live, ...extra].sort((a, b) => a.ts.localeCompare(b.ts));
 }
 
-export function snapshotFromHistoryDay(dateStr, day, { markup, thresholdPct }) {
+export function snapshotFromHistoryDay(dateStr, day, { markup, minfin, thresholdPct }) {
   const usd = day.USD;
   const eur = day.EUR;
   if (!usd?.buy || !eur?.sale || !usd.nbu || !eur.nbu) return null;
@@ -56,16 +61,21 @@ export function snapshotFromHistoryDay(dateStr, day, { markup, thresholdPct }) {
     USD: { buy: usd.buy, sale: usd.sale },
     EUR: { buy: eur.buy, sale: eur.sale },
   };
-  const p24 = {
-    USD: {
-      buy: usd.buy * markup.usdBuy,
-      sale: usd.sale * markup.usdSale,
-    },
-    EUR: {
-      buy: eur.buy * markup.eurBuy,
-      sale: eur.sale * markup.eurSale,
-    },
-  };
+  const card = minfin?.card;
+  const cash = minfin?.cash;
+  const p24Estimated = !card?.EUR?.sale;
+  const p24 = p24Estimated
+    ? {
+        USD: {
+          buy: usd.buy * markup.usdBuy,
+          sale: usd.sale * markup.usdSale,
+        },
+        EUR: {
+          buy: eur.buy * markup.eurBuy,
+          sale: eur.sale * markup.eurSale,
+        },
+      }
+    : card;
 
   const spread = computeSpread({
     businessUsdBuy: business.USD.buy,
@@ -79,17 +89,24 @@ export function snapshotFromHistoryDay(dateStr, day, { markup, thresholdPct }) {
     ts: otp24DateToIso(dateStr),
     thresholdPct,
     backfill: true,
-    p24Estimated: true,
+    p24Estimated,
     p24: {
       USD: snapshotRates(p24.USD),
       EUR: snapshotRates(p24.EUR),
+      source: p24Estimated ? "otp24-history+markup" : "minfin-card",
     },
     business: {
       USD: snapshotRates(business.USD),
       EUR: snapshotRates(business.EUR),
       source: "otp24-history",
     },
-    marketCash: null,
+    marketCash: cash?.EUR?.sale
+      ? {
+          USD: snapshotRates(cash.USD),
+          EUR: snapshotRates(cash.EUR),
+          source: "minfin-cash",
+        }
+      : null,
     nbu: {
       USD: round(usd.nbu, 4),
       EUR: round(eur.nbu, 4),
@@ -119,10 +136,20 @@ async function main() {
   const thresholdPct =
     latest?.thresholdPct != null ? Number(latest.thresholdPct) : -1;
 
-  const byDate = await fetchBusinessHistory({ sDate, eDate });
+  const [byDate, minfinByDay] = await Promise.all([
+    fetchBusinessHistory({ sDate, eDate }),
+    fetchMinfinPrivatRange(start, end),
+  ]);
   const backfill = [];
+  let minfinHits = 0;
   for (const [dateStr, day] of byDate) {
-    const snap = snapshotFromHistoryDay(dateStr, day, { markup, thresholdPct });
+    const minfin = minfinByDay.get(otp24DateToYmd(dateStr));
+    if (minfin?.card?.EUR?.sale) minfinHits += 1;
+    const snap = snapshotFromHistoryDay(dateStr, day, {
+      markup,
+      minfin,
+      thresholdPct,
+    });
     if (snap) backfill.push(snap);
   }
 
@@ -134,10 +161,11 @@ async function main() {
       {
         range: { sDate, eDate },
         otp24Days: byDate.size,
+        minfinDays: minfinByDay.size,
+        minfinCardHits: minfinHits,
         backfillRows: backfill.length,
         keptLive: existing.filter((r) => !r.backfill).length,
         mergedRows: merged.length,
-        markup,
         dryRun,
       },
       null,
