@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - miniapp/**
+      - widget/**
+      - engine/**
+      - package.json
+      - .github/workflows/rate.yml
 
 concurrency:
   group: rate-engine
