@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -37,16 +39,7 @@ jobs:
         run: node engine/index.mjs
 
       - name: Commit history
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/latest.json data/history.jsonl data/state.json
-          if git diff --staged --quiet; then
-            echo "No data changes"
-          else
-            git commit -m "data: оновлення курсів $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push origin HEAD:${{ github.ref_name }}
-          fi
+        run: bash engine/push-data.sh
 
       - name: Prepare Pages artifact
         run: |
