@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-02T10:29:27.598Z",
+  "ts": "2026-09-02T14:52:19.354Z",
   "thresholdPct": -1,
   "p24": {
     "USD": {
@@ -24,8 +24,8 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.15,
-      "sale": 44.75
+      "buy": 44.25,
+      "sale": 44.85
     },
     "EUR": {
       "buy": 50.95,
@@ -33,15 +33,15 @@
     }
   },
   "nbu": {
-    "USD": 44.4553,
-    "EUR": 51.5357
+    "USD": 44.6093,
+    "EUR": 51.6433
   },
   "spread": {
     "chainEurPerUsd": 0.852864,
-    "marketEurPerUsd": 0.862612,
-    "edgePct": -1.13,
-    "lossPct": 1.13,
-    "lossPer1000UsdUah": 502.35,
+    "marketEurPerUsd": 0.863796,
+    "edgePct": -1.266,
+    "lossPct": 1.266,
+    "lossPer1000UsdUah": 564.59,
     "favorable": false
   }
 }
