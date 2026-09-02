@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Курс ФОП</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="wrap">
       <header class="top">
         <div>
-          <p class="eyebrow">USD → UAH → EUR</p>
+          <p class="eyebrow">USD ФОП → UAH → EUR Приват24</p>
           <h1>Курс ФОП</h1>
         </div>
         <div id="badge" class="badge gray">—</div>
@@ -35,28 +35,71 @@
 
       <section class="rates">
         <div>
-          <span>ФОП USD buy</span>
+          <span>ФОП USD buy · більше = вигідніший продаж</span>
           <b id="bizUsd">—</b>
         </div>
         <div>
-          <span>P24 EUR sale</span>
+          <span>P24 EUR sale · менше = вигідніша купівля</span>
           <b id="p24Eur">—</b>
         </div>
       </section>
 
-      <nav class="periods" id="periods">
+      <section class="calc" aria-labelledby="calc-title">
+        <h2 id="calc-title">Калькулятор втрат</h2>
+        <p class="hint">Скільки EUR треба купити в Приват24 — рахуємо, скільки USD продати на ФОП і скільки втрачаєш vs НБУ.</p>
+        <label class="calc-field">
+          Потрібно EUR
+          <input id="eurInput" type="number" min="0" step="50" value="1000" inputmode="decimal" />
+        </label>
+        <div class="calc-out">
+          <div><span>Продати ФОП USD</span><b id="calcUsd">—</b></div>
+          <div><span>Гривень на купівлю EUR</span><b id="calcUah">—</b></div>
+          <div><span>За крос-курсом НБУ вистачило б USD</span><b id="calcUsdNbu">—</b></div>
+          <div class="calc-loss">
+            <span>Втрата vs НБУ</span>
+            <b id="calcLoss">—</b>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis" id="analysis" aria-live="polite">
+        <h2>Аналіз історії</h2>
+        <p class="hint">Продаж USD вигідний на максимумах купівлі ФОП. Купівля EUR — на мінімумах продажу Приват24.</p>
+        <ul id="analysisList"></ul>
+      </section>
+
+      <nav class="periods" id="ranges">
         <button type="button" data-range="24h">24 год</button>
         <button type="button" data-range="7d" class="on">7 днів</button>
         <button type="button" data-range="30d">30 днів</button>
         <button type="button" data-range="all">Усе</button>
       </nav>
+      <nav class="periods" id="intervals">
+        <button type="button" data-interval="900">15 хв</button>
+        <button type="button" data-interval="3600" class="on">1 год</button>
+        <button type="button" data-interval="14400">4 год</button>
+        <button type="button" data-interval="86400">1 день</button>
+      </nav>
+      <p class="hint chart-hint">Зум колесом, зсув пальцем або мишею. Зелені стрілки — вигідні точки, сірі — приріст свічки.</p>
 
-      <div class="chart-box">
-        <canvas id="chart"></canvas>
-      </div>
+      <section class="chart-panel">
+        <h2>USD ФОП · продаж</h2>
+        <p class="hint">Купівля банком. Зелена свічка — курс зріс (за USD дадуть більше гривень).</p>
+        <div id="chartUsd" class="tv-chart"></div>
+      </section>
+      <section class="chart-panel">
+        <h2>EUR Приват24 · купівля</h2>
+        <p class="hint">Продаж банком. Зелена свічка — курс впав (EUR дешевше в гривнях). Кольори інвертовані.</p>
+        <div id="chartEur" class="tv-chart"></div>
+      </section>
+      <section class="chart-panel">
+        <h2>Відхилення ланцюжка vs НБУ</h2>
+        <p class="hint">Ближче до нуля або плюс — конвертація USD→EUR дешевша.</p>
+        <div id="chartEdge" class="tv-chart"></div>
+      </section>
 
       <p class="meta" id="meta">Завантаження…</p>
     </main>
-    <script src="./app.js"></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>

@@ -5,7 +5,8 @@
 //
 // URL також можна передати параметром віджета.
 
-const LATEST_URL = "https://YOUR_GITHUB_USER.github.io/Privat/data/latest.json";
+const LATEST_URL =
+  "https://raw.githubusercontent.com/krmll4444/privat_currency/main/data/latest.json";
 
 const widget = await createWidget();
 if (config.runsInWidget) {

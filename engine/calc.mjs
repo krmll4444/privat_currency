@@ -59,3 +59,36 @@ export function snapshotRates(pair) {
     sale: round(pair.sale, 5),
   };
 }
+
+/**
+ * Скільки USD на ФОП треба продати, щоб купити eurAmount у Приват24.
+ */
+export function planEurPurchase({
+  eurAmount,
+  businessUsdBuy,
+  p24EurSale,
+  marketUsd,
+  marketEur,
+}) {
+  if (!eurAmount || !businessUsdBuy || !p24EurSale) {
+    return null;
+  }
+
+  const uahNeeded = eurAmount * p24EurSale;
+  const usdFop = uahNeeded / businessUsdBuy;
+  const usdNbu =
+    marketUsd && marketEur ? (eurAmount * marketEur) / marketUsd : null;
+  const extraUsd = usdNbu != null ? usdFop - usdNbu : null;
+  const extraUah = extraUsd != null ? extraUsd * businessUsdBuy : null;
+  const lossPct = usdNbu ? (usdFop / usdNbu - 1) * 100 : null;
+
+  return {
+    eurAmount,
+    usdFop,
+    usdNbu,
+    uahNeeded,
+    extraUsd,
+    extraUah,
+    lossPct,
+  };
+}

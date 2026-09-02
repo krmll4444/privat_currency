@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { computeSpread, eurPerUsd } from "./calc.mjs";
+import { computeSpread, eurPerUsd, planEurPurchase } from "./calc.mjs";
+test("калькулятор: EUR → скільки USD ФОП і втрата vs НБУ", () => {
+  const r = planEurPurchase({
+    eurAmount: 1000,
+    businessUsdBuy: 44.42,
+    p24EurSale: 52.08333,
+    marketUsd: 44.4553,
+    marketEur: 51.5357,
+  });
+  assert.ok(r.usdFop > 1172 && r.usdFop < 1173);
+  assert.ok(r.usdNbu > 1159 && r.usdNbu < 1160);
+  assert.ok(r.extraUsd > 13 && r.extraUsd < 14);
+});
 
 test("EUR за 1 USD через ланцюжок", () => {
   assert.equal(eurPerUsd(44.4, 52.08333).toFixed(5), (44.4 / 52.08333).toFixed(5));

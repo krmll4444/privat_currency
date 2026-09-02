@@ -7,6 +7,7 @@
   --green: #22c55e;
   --gray: #64748b;
   --accent: #38bdf8;
+  --red: #ef4444;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -23,9 +24,9 @@ body {
 }
 
 .wrap {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 20px 16px 40px;
+  padding: 20px 16px 48px;
 }
 
 .top {
@@ -48,11 +49,24 @@ h1 {
   font-size: 28px;
 }
 
+h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.hint {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .badge {
   border-radius: 999px;
   padding: 8px 12px;
   font-weight: 700;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .badge.green {
@@ -73,7 +87,10 @@ h1 {
 }
 
 .card,
-.rates {
+.rates,
+.calc,
+.analysis,
+.chart-panel {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -85,7 +102,8 @@ h1 {
 
 .card span,
 .rates span,
-.meta {
+.meta,
+.calc-out span {
   color: var(--muted);
   font-size: 12px;
 }
@@ -109,10 +127,67 @@ h1 {
   margin-top: 4px;
 }
 
+.calc,
+.analysis,
+.chart-panel {
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.calc-field input {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.calc-out {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.calc-out b,
+.calc-loss b {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.calc-loss {
+  grid-column: 1 / -1;
+}
+
+.calc-loss b {
+  color: var(--red);
+}
+
+.analysis ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.analysis li {
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
 .periods {
   display: flex;
   gap: 8px;
-  margin: 18px 0 10px;
+  margin: 14px 0 0;
 }
 
 .periods button {
@@ -131,24 +206,27 @@ h1 {
   border-color: var(--accent);
 }
 
-.chart-box {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 12px 8px 8px;
-  height: 260px;
+.chart-hint {
+  margin: 10px 0 0;
+}
+
+.tv-chart {
+  height: 280px;
+  width: 100%;
 }
 
 .meta {
   margin-top: 14px;
 }
 
-@media (max-width: 520px) {
-  .cards {
+@media (max-width: 640px) {
+  .cards,
+  .calc-out,
+  .rates {
     grid-template-columns: 1fr;
   }
 
-  .card strong {
-    font-size: 22px;
+  .tv-chart {
+    height: 240px;
   }
 }
