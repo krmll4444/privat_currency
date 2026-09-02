@@ -13,7 +13,7 @@
 - [ ] Підключити Telegram Web App SDK (`telegram-web-app.js`) — щоб сторінка
       підхоплювала тему (світла/темна) і знала контекст користувача
 - [ ] Захостити статику безкоштовно: GitHub Pages або Cloudflare Pages
-- [ ] У `@BotFather`: `/setmenubutton` або inline-кнопка з `web_app` — вказати URL сторінки
+- [ ] Кнопка в боті: `npm run set-menu` (`setChatMenuButton`) або `@BotFather` → `/setmenubutton` з URL Pages
 - [ ] Перевірити відкриття зсередини бота на iOS і десктопі
 
 ## Стек

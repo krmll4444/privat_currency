@@ -36,6 +36,15 @@ export function formatAlert(snapshot) {
   const biz = snapshot.business;
   const p24 = snapshot.p24;
   const sign = s.edgePct >= 0 ? "+" : "";
+  const targetEur = snapshot.targetEur;
+  const extraUah = snapshot.profile?.extraUah;
+  const why = s.byTopDays && !s.byThreshold
+    ? `топ-${fmt(snapshot.notifyTopPct, 0)}% днів історії`
+    : `поріг ${fmt(snapshot.thresholdPct, 2)}%`;
+  const extraLine =
+    extraUah != null && targetEur
+      ? `Доплата на ${targetEur} EUR: ~${fmt(extraUah, 0)} грн`
+      : `Втрата на 1000 USD: ~${fmt(s.lossPer1000UsdUah, 0)} грн`;
 
   return [
     "<b>Вигідне вікно USD → EUR</b>",
@@ -44,8 +53,8 @@ export function formatAlert(snapshot) {
     `P24 EUR sale: <code>${fmt(p24?.EUR?.sale, 5)}</code>`,
     `Ланцюжок: 1 USD → <b>${fmt(s.chainEurPerUsd, 5)} EUR</b>`,
     `НБУ: 1 USD → ${fmt(s.marketEurPerUsd, 5)} EUR`,
-    `Відхилення: <b>${sign}${fmt(s.edgePct, 2)}%</b> (поріг ${fmt(snapshot.thresholdPct, 2)}%)`,
-    `Втрата на 1000 USD: ~${fmt(s.lossPer1000UsdUah, 0)} грн`,
+    `Відхилення: <b>${sign}${fmt(s.edgePct, 2)}%</b> (${why})`,
+    extraLine,
   ].join("\n");
 }
 

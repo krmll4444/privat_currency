@@ -10,7 +10,7 @@
 4. Скільки EUR мало б вийти за НБУ: `nbu.USD / nbu.EUR`.
 5. `edgePct = (ланцюжок / НБУ − 1) × 100`. Від’ємне значення — втрата відносно НБУ.
 
-Сигнал, коли `edgePct >= SPREAD_THRESHOLD_PCT` (типово `-1.0`, тобто втрата не більша за 1%). Поріг змінюється змінною репозиторія, без правки коду.
+Сигнал, коли `edgePct >= SPREAD_THRESHOLD_PCT` (типово `-1.3`, тобто втрата не більша за 1.3%) **або** сьогодні в топ-`NOTIFY_TOP_PCT`% днів історії. Живий спред часто ~−1.27%; найкращі дні за 3 міс були близько −0.36%. Variables змінюються без правки коду.
 
 ## Джерела курсів
 
@@ -36,7 +36,9 @@ Settings → Secrets and variables → Actions:
 
 Variables (опційно):
 
-- `SPREAD_THRESHOLD_PCT` = `-1.0`
+- `SPREAD_THRESHOLD_PCT` = `-1.3`
+- `NOTIFY_TOP_PCT` = `10`
+- `TARGET_EUR` = `2000` (доплата в грн на цю суму в боті й віджеті)
 - `NOTIFY_COOLDOWN_HOURS` = `6`
 - `NOTIFY_ERRORS` = `1` якщо хочеш помилки фетчу в чат
 
@@ -46,14 +48,21 @@ Actions → General → Workflow permissions → **Read and write**.
 
 Settings → Pages → Source: **GitHub Actions**. Після першого успішного workflow з’явиться URL на кшталт `https://<user>.github.io/<repo>/`.
 
-### 3. Mini App у боті (коли будеш готовий)
+### 3. Mini App у боті
 
-`@BotFather` → `/setmenubutton` або inline-кнопка `web_app` з URL сторінки Pages.
+Після того як Pages віддає сторінку:
+
+```bash
+# у .env: TELEGRAM_BOT_TOKEN і MINIAPP_URL=https://<user>.github.io/<repo>/
+npm run set-menu
+```
+
+Або вручну: `@BotFather` → `/setmenubutton` з тим самим URL.
 
 ### 4. Віджет iPhone
 
 1. App Store: **Scriptable**.
-2. Відкрий `widget/RateWidget.js`, заміни `LATEST_URL` на `https://<user>.github.io/<repo>/data/latest.json`.
+2. Відкрий `widget/RateWidget.js` — він фетчить легкий `data/advice.json` (не весь `history.jsonl`). URL уже вказує на цей репо.
 3. Homescreen → віджет Scriptable → цей скрипт.
 
 iOS сам вирішує, як часто оновлювати віджет (орієнтовно 15–30 хв).
@@ -75,7 +84,7 @@ npm run preview        # http://127.0.0.1:8080
 
 ```
 engine/     # ядро: fetch, формула, telegram
-data/       # latest.json, history.jsonl (крону дописує)
+data/       # latest.json, history.jsonl, advice.json (крону дописує)
 miniapp/    # статична сторінка + Chart.js + Telegram Web App SDK
 widget/     # Scriptable JS
 ```

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -58,15 +58,19 @@ test("порада на сьогодні: чекати, якщо спред по
     {
       business: { USD: { buy: 40 } },
       p24: { EUR: { sale: 55 } },
+      nbu: { USD: 44, EUR: 51 },
       spread: { favorable: false, lossPer1000UsdUah: 800, edgePct: -2 },
     },
     [
       { business: { USD: { buy: 44 } }, p24: { EUR: { sale: 50 } }, spread: { edgePct: -0.4 } },
       { business: { USD: { buy: 45 } }, p24: { EUR: { sale: 51 } }, spread: { edgePct: -0.5 } },
     ],
+    { targetEur: 2000 },
   );
   assert.equal(advice.status, "wait");
   assert.match(advice.title, /не вигідно/i);
+  assert.match(advice.action, /2000 EUR/);
+  assert.ok(advice.extraUah > 0);
 });
 
 test("аналіз віддає тон для підсвітки абзаців", () => {
@@ -83,4 +87,46 @@ test("аналіз віддає тон для підсвітки абзаців"
   );
   assert.ok(notes.every((n) => n.text && n.tone));
   assert.ok(notes.some((n) => n.tone === "sell" || n.tone === "both" || n.tone === "buy"));
+});
+
+test("топ-10% днів робить спред вигідним навіть нижче порогу", () => {
+  const hist = [-2, -1.8, -1.6, -1.4, -1.2, -1.0, -0.9, -0.8, -0.7, -0.5];
+  const top = applyRankFavorable({ favorable: false, edgePct: -0.4 }, hist, 10);
+  assert.equal(top.byThreshold, false);
+  assert.equal(top.byTopDays, true);
+  assert.equal(top.favorable, true);
+
+  const poor = applyRankFavorable({ favorable: false, edgePct: -1.9 }, hist, 10);
+  assert.equal(poor.byTopDays, false);
+  assert.equal(poor.favorable, false);
+
+  const thresh = applyRankFavorable({ favorable: true, edgePct: -1.25 }, hist, 10);
+  assert.equal(thresh.byThreshold, true);
+  assert.equal(thresh.favorable, true);
+});
+
+test("advice.json: статус, доплата на профільну суму", () => {
+  const file = buildAdviceFile(
+    {
+      ts: "2026-09-02T10:00:00Z",
+      thresholdPct: -1.3,
+      targetEur: 2000,
+      business: { USD: { buy: 44.42 } },
+      p24: { EUR: { sale: 52.08333 } },
+      nbu: { USD: 44.4553, EUR: 51.5357 },
+      spread: {
+        favorable: true,
+        byThreshold: true,
+        byTopDays: false,
+        edgePct: -1.2,
+        chainEurPerUsd: 0.85,
+      },
+    },
+    [],
+    2000,
+  );
+  assert.equal(file.status, "do");
+  assert.equal(file.targetEur, 2000);
+  assert.ok(file.extraUah > 0);
+  assert.match(file.action, /2000 EUR/);
 });

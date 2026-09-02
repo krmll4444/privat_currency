@@ -9,7 +9,8 @@
     "fetch": "node engine/index.mjs",
     "backfill": "node engine/backfill.mjs",
     "chat-id": "node engine/get-chat-id.mjs",
+    "set-menu": "node engine/set-menu-button.mjs",
     "test": "node --test engine/*.test.mjs miniapp/*.test.mjs",
-    "preview": "mkdir -p miniapp/data && cp data/latest.json data/history.jsonl miniapp/data/ && python3 -m http.server 8080 --directory miniapp"
+    "preview": "mkdir -p miniapp/data && cp data/latest.json data/history.jsonl data/advice.json miniapp/data/ && python3 -m http.server 8080 --directory miniapp"
   }
 }

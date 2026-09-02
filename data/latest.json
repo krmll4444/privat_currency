@@ -1,6 +1,6 @@
 {
   "ts": "2026-09-02T19:32:26.188Z",
-  "thresholdPct": -1,
+  "thresholdPct": -1.3,
   "p24": {
     "USD": {
       "buy": 44.3,
@@ -42,6 +42,17 @@
     "edgePct": -1.266,
     "lossPct": 1.266,
     "lossPer1000UsdUah": 564.59,
-    "favorable": false
+    "favorable": true,
+    "byThreshold": true,
+    "byTopDays": false,
+    "edgeRank": 57.1
+  },
+  "targetEur": 2000,
+  "notifyTopPct": 10,
+  "profile": {
+    "extraUah": 1318,
+    "extraUsd": 29.68,
+    "usdFop": 2345.04,
+    "uahNeeded": 104167
   }
 }

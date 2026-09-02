@@ -34,6 +34,8 @@ jobs:
           PRIVAT_BUSINESS_TOKEN: ${{ secrets.PRIVAT_BUSINESS_TOKEN }}
           PRIVAT_BUSINESS_ID: ${{ secrets.PRIVAT_BUSINESS_ID }}
           SPREAD_THRESHOLD_PCT: ${{ vars.SPREAD_THRESHOLD_PCT }}
+          NOTIFY_TOP_PCT: ${{ vars.NOTIFY_TOP_PCT }}
+          TARGET_EUR: ${{ vars.TARGET_EUR }}
           NOTIFY_COOLDOWN_HOURS: ${{ vars.NOTIFY_COOLDOWN_HOURS }}
           NOTIFY_ERRORS: ${{ vars.NOTIFY_ERRORS }}
         run: node engine/index.mjs
@@ -44,7 +46,7 @@ jobs:
       - name: Prepare Pages artifact
         run: |
           mkdir -p miniapp/data
-          cp data/latest.json data/history.jsonl miniapp/data/
+          cp data/latest.json data/history.jsonl data/advice.json miniapp/data/
 
       - uses: actions/upload-pages-artifact@v5
         with:

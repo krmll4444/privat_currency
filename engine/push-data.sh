@@ -6,6 +6,7 @@ git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
 mkdir -p /tmp/rate-data
 cp data/latest.json data/history.jsonl data/state.json /tmp/rate-data/
+if [ -f data/advice.json ]; then cp data/advice.json /tmp/rate-data/; fi
 
 branch="${GITHUB_REF_NAME:-main}"
 ok=0
@@ -14,6 +15,7 @@ for i in 1 2 3 4 5 6; do
   git fetch origin "$branch"
   git reset --hard "origin/$branch"
   cp /tmp/rate-data/latest.json /tmp/rate-data/state.json data/
+  if [ -f /tmp/rate-data/advice.json ]; then cp /tmp/rate-data/advice.json data/; fi
 
   python3 - <<'PY'
 from pathlib import Path
@@ -30,7 +32,7 @@ for line in ours:
 path.write_text(("\n".join(merged) + "\n") if merged else "")
 PY
 
-  git add data/latest.json data/history.jsonl data/state.json
+  git add data/latest.json data/history.jsonl data/advice.json data/state.json
   if git diff --staged --quiet; then
     echo "No data changes"
     ok=1

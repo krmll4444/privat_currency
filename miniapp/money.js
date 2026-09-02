@@ -197,7 +197,27 @@ export function favorHints(edgeCandles, snaps, thresholdPct = -1) {
   return out;
 }
 
-export function todayAdvice(latest, rows = []) {
+export function applyRankFavorable(spread, historyEdges, topPct = 10) {
+  const byThreshold = Boolean(spread.favorable);
+  const nums = (historyEdges || []).filter((v) => v != null && !Number.isNaN(v));
+  const rank = percentileRank(spread.edgePct, nums);
+  const byTopDays =
+    rank != null && nums.length >= 8 && topPct > 0 && rank >= 100 - topPct;
+  return {
+    ...spread,
+    edgeRank: rank == null ? null : Math.round(rank * 10) / 10,
+    byThreshold,
+    byTopDays,
+    favorable: byThreshold || byTopDays,
+  };
+}
+
+export function costBit(plan) {
+  if (plan?.extraUah == null || !plan.eurAmount) return "";
+  return `Доплата ≈ ${Math.round(plan.extraUah)} грн на ${plan.eurAmount} EUR.`;
+}
+
+export function todayAdvice(latest, rows = [], { targetEur } = {}) {
   const spread = latest?.spread || {};
   const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
   const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
@@ -208,43 +228,86 @@ export function todayAdvice(latest, rows = []) {
   const sellUsd = usdRank != null ? usdRank >= 70 : false;
   const buyEur = eurRank != null ? eurRank <= 30 : false;
   const chainOk = Boolean(spread.favorable);
-  const loss = spread.lossPer1000UsdUah;
-  const lossBit =
-    loss == null ? "" : `Втрата ≈ ${Math.round(loss)} грн на 1000$.`;
+  const amount = Number(targetEur || latest?.targetEur);
+  const plan = planEurPurchase({
+    eurAmount: amount,
+    businessUsdBuy: nowUsd,
+    p24EurSale: nowEur,
+    marketUsd: latest?.nbu?.USD,
+    marketEur: latest?.nbu?.EUR,
+  });
+  const extraBit =
+    costBit(plan) ||
+    (spread.lossPer1000UsdUah == null
+      ? ""
+      : `Втрата ≈ ${Math.round(spread.lossPer1000UsdUah)} грн на 1000$.`);
 
+  let out;
   if (chainOk || (sellUsd && buyEur)) {
-    return {
+    out = {
       status: "do",
       sellUsd: true,
       buyEur: true,
       title: "Сьогодні вигідно",
-      action: `Продай USD на ФОП і купи EUR у Приват24. ${lossBit}`.trim(),
+      action: `Продай USD на ФОП і купи EUR у Приват24. ${extraBit}`.trim(),
     };
-  }
-  if (sellUsd) {
-    return {
+  } else if (sellUsd) {
+    out = {
       status: "partial",
       sellUsd: true,
       buyEur: false,
       title: "Вигідно продати USD",
-      action: `Продай долар на ФОП (курс високий). Євро поки не купуй — відносно дороге. ${lossBit}`.trim(),
+      action: `Продай долар на ФОП (курс високий). Євро поки не купуй — відносно дороге. ${extraBit}`.trim(),
     };
-  }
-  if (buyEur) {
-    return {
+  } else if (buyEur) {
+    out = {
       status: "partial",
       sellUsd: false,
       buyEur: true,
       title: "Вигідно купити EUR",
-      action: `Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. ${lossBit}`.trim(),
+      action: `Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. ${extraBit}`.trim(),
+    };
+  } else {
+    out = {
+      status: "wait",
+      sellUsd: false,
+      buyEur: false,
+      title: "Сьогодні не вигідно",
+      action: `Не конвертуй USD→EUR. ${extraBit || "Зачекай кращий спред."}`.trim(),
     };
   }
+  return { ...out, plan, extraUah: plan?.extraUah ?? null, targetEur: plan?.eurAmount ?? amount ?? null };
+}
+
+export function buildAdviceFile(snapshot, rows = [], targetEur) {
+  const advice = todayAdvice(snapshot, rows, { targetEur });
+  const plan = advice.plan;
+  const profile = snapshot.profile;
+  const round0 = (n) => (n == null || Number.isNaN(n) ? null : Math.round(n));
+  const round2 = (n) => (n == null || Number.isNaN(n) ? null : Math.round(n * 100) / 100);
   return {
-    status: "wait",
-    sellUsd: false,
-    buyEur: false,
-    title: "Сьогодні не вигідно",
-    action: `Не конвертуй USD→EUR. ${lossBit || "Зачекай кращий спред."}`.trim(),
+    ts: snapshot.ts,
+    status: advice.status,
+    title: advice.title,
+    action: advice.action,
+    sellUsd: advice.sellUsd,
+    buyEur: advice.buyEur,
+    edgePct: snapshot.spread?.edgePct ?? null,
+    favorable: Boolean(snapshot.spread?.favorable),
+    byThreshold: Boolean(snapshot.spread?.byThreshold),
+    byTopDays: Boolean(snapshot.spread?.byTopDays),
+    edgeRank: snapshot.spread?.edgeRank ?? null,
+    thresholdPct: snapshot.thresholdPct ?? null,
+    targetEur: plan?.eurAmount ?? targetEur ?? null,
+    extraUah: profile?.extraUah ?? round0(plan?.extraUah),
+    extraUsd: profile?.extraUsd ?? round2(plan?.extraUsd),
+    usdFop: profile?.usdFop ?? round2(plan?.usdFop),
+    uahNeeded: profile?.uahNeeded ?? round0(plan?.uahNeeded),
+    businessUsdBuy: snapshot.business?.USD?.buy ?? null,
+    p24EurSale: snapshot.p24?.EUR?.sale ?? null,
+    chainEurPerUsd: snapshot.spread?.chainEurPerUsd ?? null,
+    marketEurPerUsd: snapshot.spread?.marketEurPerUsd ?? null,
+    lossPer1000UsdUah: snapshot.spread?.lossPer1000UsdUah ?? null,
   };
 }
 
@@ -322,7 +385,7 @@ export function analyze(rows, latest) {
   const usdRank = percentileRank(nowUsd, usd);
   const eurRank = percentileRank(nowEur, eur);
   const notes = [];
-  const advice = todayAdvice(latest, rows);
+  const advice = todayAdvice(latest, rows, { targetEur: latest.targetEur });
 
   notes.push({ text: `${advice.title}. ${advice.action}`, tone: advice.status === "wait" ? "wait" : advice.sellUsd && advice.buyEur ? "both" : advice.sellUsd ? "sell" : advice.buyEur ? "buy" : "info" });
 

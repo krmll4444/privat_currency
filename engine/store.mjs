@@ -6,6 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const dataDir = path.join(root, "data");
 export const historyPath = path.join(dataDir, "history.jsonl");
 export const latestPath = path.join(dataDir, "latest.json");
+export const advicePath = path.join(dataDir, "advice.json");
 export const statePath = path.join(dataDir, "state.json");
 
 export async function readJson(file, fallback = null) {
@@ -19,6 +20,11 @@ export async function readJson(file, fallback = null) {
 export async function writeLatest(snapshot) {
   await mkdir(dataDir, { recursive: true });
   await writeFile(latestPath, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+}
+
+export async function writeAdvice(advice) {
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(advicePath, JSON.stringify(advice, null, 2) + "\n", "utf8");
 }
 
 export async function appendHistory(snapshot) {

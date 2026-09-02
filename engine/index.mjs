@@ -3,7 +3,9 @@ import { computeSpread, round, snapshotRates } from "./calc.mjs";
 import { fetchAll } from "./sources.mjs";
 import {
   appendHistory,
+  readHistory,
   readState,
+  writeAdvice,
   writeLatest,
   writeState,
 } from "./store.mjs";
@@ -13,6 +15,11 @@ import {
   sendTelegram,
   shouldNotify,
 } from "./telegram.mjs";
+import {
+  applyRankFavorable,
+  buildAdviceFile,
+  planEurPurchase,
+} from "../miniapp/money.js";
 
 loadEnv();
 
@@ -27,22 +34,39 @@ function envNumber(name, fallback) {
 }
 
 async function main() {
-  const thresholdPct = envNumber("SPREAD_THRESHOLD_PCT", -1.0);
+  const thresholdPct = envNumber("SPREAD_THRESHOLD_PCT", -1.3);
   const cooldownHours = envNumber("NOTIFY_COOLDOWN_HOURS", 6);
+  const targetEur = envNumber("TARGET_EUR", 2000);
+  const notifyTopPct = envNumber("NOTIFY_TOP_PCT", 10);
 
+  const history = await readHistory();
   const { p24, market, nbu, business } = await fetchAll();
 
-  const spread = computeSpread({
+  const rawSpread = computeSpread({
     businessUsdBuy: business.USD?.buy,
     p24EurSale: p24.EUR?.sale,
     marketUsd: nbu.USD,
     marketEur: nbu.EUR,
     thresholdPct,
   });
+  const spread = applyRankFavorable(
+    rawSpread,
+    history.map((row) => row.spread?.edgePct),
+    notifyTopPct,
+  );
+  const plan = planEurPurchase({
+    eurAmount: targetEur,
+    businessUsdBuy: business.USD?.buy,
+    p24EurSale: p24.EUR?.sale,
+    marketUsd: nbu.USD,
+    marketEur: nbu.EUR,
+  });
 
   const snapshot = {
     ts: new Date().toISOString(),
     thresholdPct,
+    targetEur,
+    notifyTopPct,
     p24: {
       USD: snapshotRates(p24.USD),
       EUR: snapshotRates(p24.EUR),
@@ -67,11 +91,24 @@ async function main() {
       lossPct: round(spread.lossPct, 3),
       lossPer1000UsdUah: round(spread.lossPer1000UsdUah, 2),
       favorable: spread.favorable,
+      byThreshold: spread.byThreshold,
+      byTopDays: spread.byTopDays,
+      edgeRank: spread.edgeRank,
     },
+    profile: plan
+      ? {
+          extraUah: round(plan.extraUah, 0),
+          extraUsd: round(plan.extraUsd, 2),
+          usdFop: round(plan.usdFop, 2),
+          uahNeeded: round(plan.uahNeeded, 0),
+        }
+      : null,
   };
 
+  const rows = [...history, snapshot];
   await writeLatest(snapshot);
   await appendHistory(snapshot);
+  await writeAdvice(buildAdviceFile(snapshot, rows, targetEur));
 
   const state = await readState();
   const decision = shouldNotify(snapshot, state, cooldownHours);
@@ -82,6 +119,9 @@ async function main() {
         ts: snapshot.ts,
         edgePct: snapshot.spread.edgePct,
         favorable: snapshot.spread.favorable,
+        byThreshold: snapshot.spread.byThreshold,
+        byTopDays: snapshot.spread.byTopDays,
+        extraUah: snapshot.profile?.extraUah ?? null,
         notify: decision,
       },
       null,

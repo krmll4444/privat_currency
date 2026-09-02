@@ -29,6 +29,7 @@ const INTERVAL_LABEL = {
   86400: "1 день",
 };
 
+const DEFAULT_TARGET_EUR = 2000;
 const stored = (key, fallback) => localStorage.getItem(key) || fallback;
 
 const tg = window.Telegram?.WebApp;
@@ -45,6 +46,8 @@ let chartStyle = stored("privat-chart-style", "candles") === "line" ? "line" : "
 let themePref = ["light", "dark", "auto"].includes(stored("privat-theme", "auto"))
   ? stored("privat-theme", "auto")
   : "auto";
+let targetEur =
+  Number(stored("privat-target-eur", String(DEFAULT_TARGET_EUR))) || DEFAULT_TARGET_EUR;
 let panes = [];
 
 function resolvedTheme() {
@@ -65,6 +68,12 @@ function persist() {
   localStorage.setItem("privat-interval", String(intervalSec));
   localStorage.setItem("privat-chart-style", chartStyle);
   localStorage.setItem("privat-theme", themePref);
+  localStorage.setItem("privat-target-eur", String(targetEur));
+}
+
+function currentTargetEur() {
+  const n = Number(document.getElementById("eurInput")?.value);
+  return n > 0 ? n : targetEur;
 }
 
 function markPills(rootId, attr, value) {
@@ -116,14 +125,19 @@ function visibleRows() {
 function renderLatest() {
   const spread = latest.spread || {};
   const rows = visibleRows();
-  const advice = todayAdvice(latest, rows.length ? rows : history);
+  const amount = currentTargetEur();
+  const advice = todayAdvice(latest, rows.length ? rows : history, { targetEur: amount });
   const badge = document.getElementById("badge");
-  badge.textContent = advice.title;
+  const extra =
+    advice.extraUah == null ? "" : ` · ${Math.round(advice.extraUah)} грн`;
+  badge.textContent = `${advice.title}${extra}`;
   badge.className = `badge ${advice.status === "wait" ? "gray" : "green"}`;
   document.getElementById("chain").textContent = `${fmt(spread.chainEurPerUsd, 5)} €`;
   document.getElementById("nbu").textContent = `${fmt(spread.marketEurPerUsd, 5)} €`;
+  const lossLabel = document.getElementById("lossLabel");
+  if (lossLabel) lossLabel.textContent = `Доплата / ${amount} EUR`;
   document.getElementById("loss").textContent =
-    spread.lossPer1000UsdUah == null ? "—" : `${Math.round(spread.lossPer1000UsdUah)} грн`;
+    advice.extraUah == null ? "—" : `${Math.round(advice.extraUah)} грн`;
   document.getElementById("bizUsd").textContent = fmt(latest.business?.USD?.buy, 4);
   document.getElementById("p24Eur").textContent = fmt(latest.p24?.EUR?.sale, 5);
   document.getElementById("rateUsd")?.classList.toggle("hot", advice.sellUsd);
@@ -165,7 +179,10 @@ function renderAnalysis() {
   const list = document.getElementById("analysisList");
   if (!list || !latest) return;
   const rows = visibleRows();
-  const notes = analyze(rows.length ? rows : history, latest);
+  const notes = analyze(rows.length ? rows : history, {
+    ...latest,
+    targetEur: currentTargetEur(),
+  });
   list.replaceChildren(
     ...notes.map((note) => {
       const li = document.createElement("li");
@@ -263,7 +280,22 @@ function bindPills(rootId, onPick) {
 function bindUi() {
   applyTheme();
   syncSettings();
-  document.getElementById("eurInput")?.addEventListener("input", renderCalc);
+  const eurInput = document.getElementById("eurInput");
+  if (eurInput) {
+    eurInput.value = String(targetEur);
+    eurInput.addEventListener("input", () => {
+      const n = Number(eurInput.value);
+      if (n > 0) {
+        targetEur = n;
+        persist();
+      }
+      renderCalc();
+      if (latest) {
+        renderLatest();
+        renderAnalysis();
+      }
+    });
+  }
   document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
   document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
   document.getElementById("calcModal")?.addEventListener("click", (event) => {
