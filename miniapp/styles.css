@@ -1,0 +1,154 @@
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --line: #334155;
+  --green: #22c55e;
+  --gray: #64748b;
+  --accent: #38bdf8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: 28px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.badge.green {
+  background: color-mix(in srgb, var(--green) 22%, transparent);
+  color: var(--green);
+}
+
+.badge.gray {
+  background: color-mix(in srgb, var(--gray) 25%, transparent);
+  color: var(--muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.card,
+.rates {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.card {
+  padding: 12px;
+}
+
+.card span,
+.rates span,
+.meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.rates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 10px;
+  padding: 12px 14px;
+  gap: 12px;
+}
+
+.rates b {
+  display: block;
+  margin-top: 4px;
+}
+
+.periods {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 10px;
+}
+
+.periods button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.periods button.on {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.chart-box {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 8px 8px;
+  height: 260px;
+}
+
+.meta {
+  margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .card strong {
+    font-size: 22px;
+  }
+}

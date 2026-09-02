@@ -1,0 +1,69 @@
+name: Rate engine
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: rate-engine
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch rates, history, Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PRIVAT_BUSINESS_TOKEN: ${{ secrets.PRIVAT_BUSINESS_TOKEN }}
+          PRIVAT_BUSINESS_ID: ${{ secrets.PRIVAT_BUSINESS_ID }}
+          SPREAD_THRESHOLD_PCT: ${{ vars.SPREAD_THRESHOLD_PCT }}
+          NOTIFY_COOLDOWN_HOURS: ${{ vars.NOTIFY_COOLDOWN_HOURS }}
+          NOTIFY_ERRORS: ${{ vars.NOTIFY_ERRORS }}
+        run: node engine/index.mjs
+
+      - name: Commit history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json data/history.jsonl data/state.json
+          if git diff --staged --quiet; then
+            echo "No data changes"
+          else
+            git commit -m "data: оновлення курсів $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p miniapp/data
+          cp data/latest.json data/history.jsonl miniapp/data/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: miniapp
+
+  pages:
+    needs: fetch
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

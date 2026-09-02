@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Курс ФОП</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="top">
+        <div>
+          <p class="eyebrow">USD → UAH → EUR</p>
+          <h1>Курс ФОП</h1>
+        </div>
+        <div id="badge" class="badge gray">—</div>
+      </header>
+
+      <section class="cards">
+        <article class="card">
+          <span>1 USD → EUR</span>
+          <strong id="chain">—</strong>
+        </article>
+        <article class="card">
+          <span>НБУ</span>
+          <strong id="nbu">—</strong>
+        </article>
+        <article class="card">
+          <span>Втрата / 1000 $</span>
+          <strong id="loss">—</strong>
+        </article>
+      </section>
+
+      <section class="rates">
+        <div>
+          <span>ФОП USD buy</span>
+          <b id="bizUsd">—</b>
+        </div>
+        <div>
+          <span>P24 EUR sale</span>
+          <b id="p24Eur">—</b>
+        </div>
+      </section>
+
+      <nav class="periods" id="periods">
+        <button type="button" data-range="24h">24 год</button>
+        <button type="button" data-range="7d" class="on">7 днів</button>
+        <button type="button" data-range="30d">30 днів</button>
+        <button type="button" data-range="all">Усе</button>
+      </nav>
+
+      <div class="chart-box">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <p class="meta" id="meta">Завантаження…</p>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
