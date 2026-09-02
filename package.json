@@ -7,6 +7,7 @@
   },
   "scripts": {
     "fetch": "node engine/index.mjs",
+    "backfill": "node engine/backfill.mjs",
     "chat-id": "node engine/get-chat-id.mjs",
     "test": "node --test engine/*.test.mjs miniapp/*.test.mjs",
     "preview": "mkdir -p miniapp/data && cp data/latest.json data/history.jsonl miniapp/data/ && python3 -m http.server 8080 --directory miniapp"

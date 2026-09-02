@@ -44,6 +44,7 @@ export function cutoffMs(range) {
   if (range === "24h") return now - 24 * 3600 * 1000;
   if (range === "7d") return now - 7 * 24 * 3600 * 1000;
   if (range === "30d") return now - 30 * 24 * 3600 * 1000;
+  if (range === "90d") return now - 90 * 24 * 3600 * 1000;
   return 0;
 }
 
@@ -177,6 +178,12 @@ export function analyze(rows, latest) {
   const usdRank = percentileRank(nowUsd, usd);
   const eurRank = percentileRank(nowEur, eur);
   const notes = [];
+
+  if (rows.some((r) => r.backfill || r.p24Estimated)) {
+    notes.push(
+      "USD ФОП — з архіву otp24 (робочі дні). Карткового архіву P24 немає, тож EUR sale оцінений: курс ФОП × поточна націнка картки.",
+    );
+  }
 
   if (rows.length < 8) {
     notes.push(

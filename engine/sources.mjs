@@ -5,6 +5,8 @@ const MARKET_URL =
 const NBU_URL =
   "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
 const BUSINESS_URL = "https://otp24.privatbank.ua/api/1/info/currency/get";
+const BUSINESS_HISTORY_URL =
+  "https://otp24.privatbank.ua/api/1/info/currency/history";
 const BUSINESS_AUTOCLIENT_URL = "https://acp.privatbank.ua/api/proxy/currency/";
 
 const UA =
@@ -122,3 +124,51 @@ export async function fetchAll() {
   ]);
   return { p24, market, nbu, business };
 }
+
+function uaDate(date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Kyiv",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+  const pick = (type) => parts.find((p) => p.type === type)?.value;
+  return `${pick("day")}-${pick("month")}-${pick("year")}`;
+}
+
+export function parseOtp24History(payload) {
+  const rows = payload?.data?.history || payload?.history || [];
+  const byDate = new Map();
+  for (const row of rows) {
+    const ccy = row.currencyCode || row.ccy;
+    if (ccy !== "USD" && ccy !== "EUR") continue;
+    const day = byDate.get(row.date) || {};
+    day[ccy] = {
+      buy: num(row.rate_b ?? row.B?.rate),
+      sale: num(row.rate_s ?? row.S?.rate),
+      nbu: num(row.nbuRate ?? row.nbu),
+    };
+    byDate.set(row.date, day);
+  }
+  return byDate;
+}
+
+export async function fetchBusinessHistory({ sDate, eDate }) {
+  const res = await fetch(BUSINESS_HISTORY_URL, {
+    method: "POST",
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Referer: "https://otp24.privatbank.ua/",
+    },
+    body: JSON.stringify({ sDate, eDate }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`otp24 history → HTTP ${res.status} ${body.slice(0, 200)}`);
+  }
+  return parseOtp24History(await res.json());
+}
+
+export { uaDate };

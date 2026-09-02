@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -31,4 +31,10 @@ test("свічки групують тіки", () => {
 
 test("перцентиль: вище = кращий продаж USD", () => {
   assert.equal(percentileRank(5, [1, 2, 3, 4, 5]), 80);
+});
+
+test("cutoff 90d", () => {
+  const from = cutoffMs("90d");
+  const span = Date.now() - from;
+  assert.ok(span > 89 * 24 * 3600 * 1000 && span < 91 * 24 * 3600 * 1000);
 });

@@ -32,6 +32,27 @@ export async function appendHistory(snapshot) {
   }
 }
 
+export async function readHistory() {
+  try {
+    const text = await readFile(historyPath, "utf8");
+    return text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  } catch {
+    return [];
+  }
+}
+
+export async function writeHistory(snapshots) {
+  await mkdir(dataDir, { recursive: true });
+  const body =
+    snapshots.map((row) => JSON.stringify(row)).join("\n") +
+    (snapshots.length ? "\n" : "");
+  await writeFile(historyPath, body, "utf8");
+}
+
 export async function readState() {
   return (await readJson(statePath, {})) ?? {};
 }

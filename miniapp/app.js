@@ -53,8 +53,8 @@ function parseJsonl(text) {
 
 let latest = null;
 let history = [];
-let range = "7d";
-let intervalSec = 3600;
+let range = "90d";
+let intervalSec = 86400;
 let panes = [];
 
 function renderLatest() {
@@ -181,6 +181,13 @@ function bindUi() {
   });
   bindToggles("ranges", "data-range", (btn) => {
     range = btn.dataset.range;
+    if (range === "90d" || range === "all") {
+      intervalSec = 86400;
+      const intervals = document.getElementById("intervals");
+      for (const el of intervals?.querySelectorAll("button") ?? []) {
+        el.classList.toggle("on", el.dataset.interval === "86400");
+      }
+    }
   });
   bindToggles("intervals", "data-interval", (btn) => {
     intervalSec = Number(btn.dataset.interval);

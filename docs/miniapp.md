@@ -24,3 +24,4 @@ HTML/JS · Chart.js · Telegram Web App SDK · GitHub Pages / Cloudflare Pages
 
 ## Залежності
 Потребує `history.jsonl`, який генерує **Проект 1** — без нього графіку нема що показувати.
+Для стартової статистики: `npm run backfill` (архів ФОП за ~3 місяці).
