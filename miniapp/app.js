@@ -16,18 +16,8 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
-  applyTheme(tg.themeParams);
-  tg.onEvent("themeChanged", () => applyTheme(tg.themeParams));
-}
-
-function applyTheme(tp = {}) {
-  const root = document.documentElement.style;
-  if (tp.bg_color) root.setProperty("--bg", tp.bg_color);
-  if (tp.secondary_bg_color) root.setProperty("--card", tp.secondary_bg_color);
-  if (tp.text_color) root.setProperty("--text", tp.text_color);
-  if (tp.hint_color) root.setProperty("--muted", tp.hint_color);
-  if (tp.hint_color) root.setProperty("--line", tp.hint_color + "44");
-  if (tp.button_color) root.setProperty("--accent", tp.button_color);
+  tg.setHeaderColor?.("#4ea524");
+  tg.setBackgroundColor?.("#f0f3f4");
 }
 
 async function loadFirst(urls) {

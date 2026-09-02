@@ -1,8 +1,5 @@
 import { deltaHistogram, toLine } from "./money.js";
 
-const UP = "#22c55e";
-const DOWN = "#ef4444";
-
 function css(name, fallback) {
   return (
     getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
@@ -10,32 +7,41 @@ function css(name, fallback) {
   );
 }
 
-function chartOptions() {
-  const text = css("--text", "#f8fafc");
-  const muted = css("--muted", "#94a3b8");
-  const bg = css("--card", "#1e293b");
-  const line = css("--line", "#334155");
+function palette() {
+  return {
+    up: css("--green", "#4ea524"),
+    down: css("--red", "#f53d46"),
+    text: css("--text", "rgba(0,0,0,.96)"),
+    muted: css("--muted", "rgba(0,0,0,.54)"),
+    bg: css("--card", "#fff"),
+    line: css("--line", "rgba(0,0,0,.15)"),
+    blue: css("--blue", "#008ffe"),
+    font: css("font-family", "Manrope, Helvetica, Arial, sans-serif"),
+  };
+}
 
+function chartOptions() {
+  const p = palette();
   return {
     autoSize: true,
     layout: {
-      background: { color: bg },
-      textColor: text,
-      fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
+      background: { color: p.bg },
+      textColor: p.text,
+      fontFamily: p.font,
     },
     grid: {
-      vertLines: { color: line },
-      horzLines: { color: line },
+      vertLines: { color: p.line },
+      horzLines: { color: p.line },
     },
-    rightPriceScale: { borderColor: line },
+    rightPriceScale: { borderColor: p.line },
     timeScale: {
-      borderColor: line,
+      borderColor: p.line,
       timeVisible: true,
       secondsVisible: false,
     },
     crosshair: {
-      horzLine: { color: muted, labelBackgroundColor: bg },
-      vertLine: { color: muted, labelBackgroundColor: bg },
+      horzLine: { color: p.muted, labelBackgroundColor: p.bg },
+      vertLine: { color: p.muted, labelBackgroundColor: p.bg },
     },
     handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
     handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
@@ -63,10 +69,11 @@ export function createPane(
   if (!el || !window.LightweightCharts) return null;
   el.replaceChildren();
   const LWC = window.LightweightCharts;
+  const p = palette();
   const chart = LWC.createChart(el, chartOptions());
   const favor = addFavorSeries(chart);
-  const up = invertColors ? DOWN : UP;
-  const down = invertColors ? UP : DOWN;
+  const up = invertColors ? p.down : p.up;
+  const down = invertColors ? p.up : p.down;
   const isLine = style === "line";
   const lineType = LWC.LineType?.Simple ?? 0;
 
@@ -74,12 +81,12 @@ export function createPane(
   if (isLine && baseline) {
     main = chart.addBaselineSeries({
       baseValue: { type: "price", price: 0 },
-      topLineColor: UP,
-      topFillColor1: "rgba(34, 197, 94, 0.28)",
-      topFillColor2: "rgba(34, 197, 94, 0.04)",
-      bottomLineColor: DOWN,
-      bottomFillColor1: "rgba(239, 68, 68, 0.22)",
-      bottomFillColor2: "rgba(239, 68, 68, 0.04)",
+      topLineColor: p.up,
+      topFillColor1: "rgba(78, 165, 36, 0.28)",
+      topFillColor2: "rgba(78, 165, 36, 0.04)",
+      bottomLineColor: p.down,
+      bottomFillColor1: "rgba(245, 61, 70, 0.22)",
+      bottomFillColor2: "rgba(245, 61, 70, 0.04)",
       lineWidth: 2,
       lineType,
       lastValueVisible: true,
@@ -88,7 +95,7 @@ export function createPane(
     });
   } else if (isLine) {
     main = chart.addLineSeries({
-      color: invertColors ? "#38bdf8" : UP,
+      color: invertColors ? p.blue : p.up,
       lineWidth: 2,
       lineType,
       lastValueVisible: true,

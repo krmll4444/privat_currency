@@ -1,14 +1,25 @@
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --line: #334155;
-  --green: #22c55e;
-  --gray: #64748b;
-  --accent: #38bdf8;
-  --red: #ef4444;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Приват24 lightGreen */
+  --bg: #f0f3f4;
+  --card: #fff;
+  --text: rgba(0, 0, 0, 0.96);
+  --muted: rgba(0, 0, 0, 0.54);
+  --line: rgba(0, 0, 0, 0.15);
+  --green: #4ea524;
+  --green-hover: #53b125;
+  --green-pressed: #499b22;
+  --green-dark: #3b7d1c;
+  --ink: #1e2527;
+  --gray: #a3acae;
+  --accent: #4ea524;
+  --red: #f53d46;
+  --red-text: #d22d35;
+  --warn: #ffb300;
+  --blue: #008ffe;
+  --on-accent: #fff;
+  --overlay: rgba(30, 37, 39, 0.6);
+  --shadow: 0 8px 24px rgba(30, 37, 39, 0.08);
+  font-family: Manrope, Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -21,6 +32,11 @@ body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
+}
+
+.pb-strip {
+  height: 4px;
+  background: var(--green);
 }
 
 .wrap {
@@ -47,6 +63,8 @@ body {
 h1 {
   margin: 4px 0 0;
   font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 h2 {
@@ -70,12 +88,12 @@ h2 {
 }
 
 .badge.green {
-  background: color-mix(in srgb, var(--green) 22%, transparent);
-  color: var(--green);
+  background: var(--green);
+  color: var(--on-accent);
 }
 
 .badge.gray {
-  background: color-mix(in srgb, var(--gray) 25%, transparent);
+  background: rgba(30, 37, 39, 0.08);
   color: var(--muted);
 }
 
@@ -92,6 +110,7 @@ h2 {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
+  box-shadow: var(--shadow);
 }
 
 .card {
@@ -175,8 +194,9 @@ h2 {
 }
 
 .icon-btn[aria-expanded="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--on-accent);
 }
 
 .settings-wrap {
@@ -194,7 +214,7 @@ h2 {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow);
 }
 
 .settings-menu[hidden] {
@@ -241,15 +261,15 @@ h2 {
 }
 
 .leg.profit::before {
-  background: rgba(34, 197, 94, 0.7);
+  background: var(--green);
 }
 
 .leg.zero::before {
-  background: rgba(250, 204, 21, 0.8);
+  background: var(--warn);
 }
 
 .leg.low::before {
-  background: rgba(74, 222, 128, 0.45);
+  background: rgba(78, 165, 36, 0.4);
 }
 
 .btn-modal {
@@ -259,11 +279,19 @@ h2 {
   border: 0;
   border-radius: 14px;
   padding: 14px 16px;
-  background: var(--accent);
-  color: #0f172a;
+  background: var(--green);
+  color: var(--on-accent);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.btn-modal:hover {
+  background: var(--green-hover);
+}
+
+.btn-modal:active {
+  background: var(--green-pressed);
 }
 
 .modal-backdrop {
@@ -274,7 +302,7 @@ h2 {
   align-items: flex-end;
   justify-content: center;
   padding: 12px;
-  background: rgba(2, 6, 23, 0.72);
+  background: var(--overlay);
   backdrop-filter: blur(10px);
 }
 
@@ -290,7 +318,7 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 20px 20px 16px 16px;
   padding: 18px 18px 22px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 24px 80px rgba(30, 37, 39, 0.28);
 }
 
 .modal-head {
@@ -337,8 +365,8 @@ h2 {
 }
 
 .calc-input-wrap:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(78, 165, 36, 0.28);
 }
 
 .calc-field input {
@@ -364,7 +392,7 @@ h2 {
 }
 
 .calc-suffix {
-  color: var(--accent);
+  color: var(--green-dark);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -397,7 +425,7 @@ h2 {
 }
 
 .calc-loss b {
-  color: var(--red);
+  color: var(--red-text);
 }
 
 .analysis {
@@ -430,7 +458,7 @@ h2 {
 .periods button {
   flex: 1;
   border: 1px solid var(--line);
-  background: transparent;
+  background: var(--card);
   color: var(--muted);
   border-radius: 999px;
   padding: 8px 0;
@@ -438,9 +466,9 @@ h2 {
 }
 
 .periods button.on {
-  background: var(--card);
-  color: var(--text);
-  border-color: var(--accent);
+  background: var(--green);
+  color: var(--on-accent);
+  border-color: var(--green);
 }
 
 .chart-hint {

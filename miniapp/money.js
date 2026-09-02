@@ -99,7 +99,7 @@ export function deltaHistogram(candles) {
     return {
       time: c.time,
       value: delta,
-      color: delta >= 0 ? "rgba(34, 197, 94, 0.45)" : "rgba(239, 68, 68, 0.45)",
+      color: delta >= 0 ? "rgba(78, 165, 36, 0.45)" : "rgba(245, 61, 70, 0.45)",
     };
   });
 }
@@ -118,9 +118,9 @@ export function sectorKind(edgePct, thresholdPct = -1, zeroEps = 0.05) {
 }
 
 export function favorColor(kind) {
-  if (kind === "profit") return "rgba(34, 197, 94, 0.32)";
-  if (kind === "zero") return "rgba(250, 204, 21, 0.24)";
-  if (kind === "low-loss") return "rgba(74, 222, 128, 0.14)";
+  if (kind === "profit") return "rgba(78, 165, 36, 0.32)";
+  if (kind === "zero") return "rgba(255, 179, 0, 0.28)";
+  if (kind === "low-loss") return "rgba(163, 232, 69, 0.28)";
   return "rgba(0, 0, 0, 0)";
 }
 
@@ -152,7 +152,7 @@ export function usdMarkers(candles) {
     markers.push({
       time: candles[i].time,
       position: "aboveBar",
-      color: "#22c55e",
+      color: "#4ea524",
       shape: "arrowUp",
       text: "Продаж USD",
     });
@@ -165,7 +165,7 @@ export function usdMarkers(candles) {
     markers.push({
       time: c.time,
       position: delta > 0 ? "aboveBar" : "belowBar",
-      color: "#64748b",
+      color: "#a3acae",
       shape: delta > 0 ? "arrowUp" : "arrowDown",
     });
   });
@@ -178,7 +178,7 @@ export function eurMarkers(candles) {
     markers.push({
       time: candles[i].time,
       position: "belowBar",
-      color: "#22c55e",
+      color: "#4ea524",
       shape: "arrowDown",
       text: "Купівля EUR",
     });
@@ -191,7 +191,7 @@ export function eurMarkers(candles) {
     markers.push({
       time: c.time,
       position: delta < 0 ? "belowBar" : "aboveBar",
-      color: "#64748b",
+      color: "#a3acae",
       shape: delta < 0 ? "arrowDown" : "arrowUp",
     });
   });
@@ -204,7 +204,7 @@ export function edgeMarkers(candles) {
     markers.push({
       time: candles[i].time,
       position: "aboveBar",
-      color: "#22c55e",
+      color: "#4ea524",
       shape: "arrowUp",
       text: "Кращий спред",
     });
