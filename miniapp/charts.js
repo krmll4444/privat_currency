@@ -1,11 +1,4 @@
-import { deltaHistogram, toLine } from "./money.js";
-
-function css(name, fallback) {
-  return toChartColor(
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
-    fallback,
-  );
-}
+import { deltaHistogram, toLine } from "./money.js?v=20260902c";
 
 /** lightweight-charts 4.x не парсить hsla()/hsl(). */
 export function toChartColor(raw, fallback) {
@@ -53,15 +46,16 @@ function rgbaString({ r, g, b }, a) {
 }
 
 function palette() {
+  const dark = document.documentElement.dataset.theme === "dark";
   return {
-    up: css("--green", "#4ea524"),
-    down: css("--red", "#f53d46"),
-    text: css("--text", "rgba(0,0,0,.96)"),
-    muted: css("--muted", "rgba(0,0,0,.54)"),
-    bg: css("--card", "#fff"),
-    line: css("--line", "rgba(0,0,0,.15)"),
-    blue: css("--blue", "#008ffe"),
-    font: css("font-family", "Manrope, Helvetica, Arial, sans-serif"),
+    up: "#4ea524",
+    down: "#f53d46",
+    text: dark ? "rgba(255,255,255,0.96)" : "rgba(0,0,0,0.96)",
+    muted: dark ? "rgba(255,255,255,0.54)" : "rgba(0,0,0,0.54)",
+    bg: dark ? "#1e2527" : "#ffffff",
+    line: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)",
+    blue: "#008ffe",
+    font: "Manrope, Helvetica, Arial, sans-serif",
   };
 }
 

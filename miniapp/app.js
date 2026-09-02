@@ -12,8 +12,8 @@ import {
   toCandles,
   todayAdvice,
   usdMarkers,
-} from "./money.js";
-import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js";
+} from "./money.js?v=20260902c";
+import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260902c";
 
 const RANGE_LABEL = {
   "24h": "24 год",
@@ -59,11 +59,6 @@ function resolvedTheme() {
 function applyTheme() {
   const theme = resolvedTheme();
   document.documentElement.dataset.theme = theme;
-  const bg = theme === "dark" ? "#15191a" : "#f0f3f4";
-  if (tg?.isVersionAtLeast?.("6.1")) {
-    tg.setHeaderColor?.("#4ea524");
-    tg.setBackgroundColor?.(bg);
-  }
 }
 
 function persist() {
