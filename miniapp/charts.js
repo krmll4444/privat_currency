@@ -1,4 +1,4 @@
-import { deltaHistogram, toLine } from "./money.js?v=20260902c";
+import { deltaHistogram, toLine } from "./money.js?v=20260902d";
 
 /** lightweight-charts 4.x не парсить hsla()/hsl(). */
 export function toChartColor(raw, fallback) {

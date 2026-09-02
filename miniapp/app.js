@@ -12,8 +12,8 @@ import {
   toCandles,
   todayAdvice,
   usdMarkers,
-} from "./money.js?v=20260902c";
-import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260902c";
+} from "./money.js?v=20260902d";
+import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260902d";
 
 const RANGE_LABEL = {
   "24h": "24 год",
@@ -338,6 +338,7 @@ function bindUi() {
       }
     });
   }
+  document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
   document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
   document.getElementById("calcModal")?.addEventListener("click", (event) => {
     if (event.target.id === "calcModal") setModalOpen(false);
