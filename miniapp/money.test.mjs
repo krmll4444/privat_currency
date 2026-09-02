@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile, sideSignals, cashCompare, waitHorizon, dayDeltaPct, daysUntil } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -129,4 +129,74 @@ test("advice.json: статус, доплата на профільну суму
   assert.equal(file.targetEur, 2000);
   assert.ok(file.extraUah > 0);
   assert.match(file.action, /2000 EUR/);
+});
+
+test("ланцюжок ок не підміняє боки: sell і buy лишаються окремо", () => {
+  const advice = todayAdvice(
+    {
+      business: { USD: { buy: 40 } },
+      p24: { EUR: { sale: 55 } },
+      spread: { favorable: true, edgePct: -1.2 },
+    },
+    [
+      { business: { USD: { buy: 44 } }, p24: { EUR: { sale: 50 } } },
+      { business: { USD: { buy: 45 } }, p24: { EUR: { sale: 51 } } },
+    ],
+  );
+  assert.equal(advice.sellUsd, false);
+  assert.equal(advice.buyEur, false);
+  assert.match(advice.title, /спред/i);
+});
+
+test("вигідно лише продати USD", () => {
+  const sides = sideSignals(
+    { business: { USD: { buy: 46 } }, p24: { EUR: { sale: 53 } } },
+    [
+      { business: { USD: { buy: 40 } }, p24: { EUR: { sale: 50 } } },
+      { business: { USD: { buy: 41 } }, p24: { EUR: { sale: 51 } } },
+      { business: { USD: { buy: 42 } }, p24: { EUR: { sale: 52 } } },
+      { business: { USD: { buy: 43 } }, p24: { EUR: { sale: 50.5 } } },
+    ],
+  );
+  assert.equal(sides.sellUsd, true);
+  assert.equal(sides.buyEur, false);
+});
+
+test("картка vs готівка: премія картки", () => {
+  const cash = cashCompare(
+    {
+      p24: { EUR: { sale: 52.08 } },
+      marketCash: { EUR: { sale: 51.95 } },
+      business: { USD: { buy: 44.42 } },
+    },
+    2000,
+  );
+  assert.equal(cash.plays, false);
+  assert.ok(cash.extraUah > 200);
+  assert.match(cash.verdict, /не грає/i);
+});
+
+test("чекати 5 днів має сенс, якщо історія часто дає +0.3 п.п.", () => {
+  const dailyEdges = [];
+  for (let i = 0; i < 30; i += 1) {
+    dailyEdges.push({ date: `2026-06-${String((i % 28) + 1).padStart(2, "0")}`, edgePct: i % 5 === 0 ? -0.4 : -1.4 });
+  }
+  const h = waitHorizon({ edgePct: -1.4, daysLeft: 5, dailyEdges, improvePp: 0.3 });
+  assert.equal(h.wait, true);
+  assert.match(h.text, /5 днів/);
+});
+
+test("dayDelta vs перший тік дня", () => {
+  const delta = dayDeltaPct(
+    { ts: "2026-09-02T18:00:00Z", spread: { edgePct: -1.0 } },
+    [
+      { ts: "2026-09-02T07:00:00Z", spread: { edgePct: -1.4 } },
+      { ts: "2026-09-02T12:00:00Z", spread: { edgePct: -1.2 } },
+    ],
+  );
+  assert.equal(delta, 0.4);
+});
+
+test("daysUntil рахує календарні дні", () => {
+  assert.equal(daysUntil("2026-09-07", Date.parse("2026-09-02T12:00:00Z")), 5);
 });

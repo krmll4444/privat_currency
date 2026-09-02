@@ -64,11 +64,27 @@ async function createWidget() {
   action.minimumScaleFactor = 0.7;
   action.lineLimit = config.widgetFamily === "small" ? 3 : 4;
 
+  if (data.waitText && config.widgetFamily !== "small") {
+    w.addSpacer(4);
+    const wait = w.addText(data.waitText);
+    wait.textColor = muted;
+    wait.font = Font.systemFont(11);
+    wait.minimumScaleFactor = 0.7;
+    wait.lineLimit = 3;
+  }
+
   if (config.widgetFamily !== "small") {
     w.addSpacer(8);
     addRateRow(w, "ФОП USD buy", fmt(data.businessUsdBuy, 4), text, muted);
     addRateRow(w, "P24 EUR sale", fmt(data.p24EurSale, 5), text, muted);
+    if (data.cashEurSale) {
+      addRateRow(w, "Готівка EUR sale", fmt(data.cashEurSale, 5), text, muted);
+    }
     addRateRow(w, "1 USD → EUR", fmt(data.chainEurPerUsd, 5), text, muted);
+    if (data.dayDelta != null) {
+      const sign = data.dayDelta >= 0 ? "+" : "";
+      addRateRow(w, "За день", `${sign}${Number(data.dayDelta).toFixed(2)} п.п.`, text, muted);
+    }
   }
 
   w.addSpacer();

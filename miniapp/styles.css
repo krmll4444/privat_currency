@@ -115,7 +115,10 @@ h2 {
   padding: 8px 12px;
   font-weight: 700;
   font-size: 14px;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: right;
+  max-width: min(16rem, 58%);
+  line-height: 1.25;
 }
 
 .badge.green {
@@ -182,6 +185,25 @@ h2 {
 .rates b {
   display: block;
   margin-top: 4px;
+}
+
+.insights {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insights p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
 }
 
 .chart-panel {

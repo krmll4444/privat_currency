@@ -48,6 +48,7 @@ let themePref = ["light", "dark", "auto"].includes(stored("privat-theme", "auto"
   : "auto";
 let targetEur =
   Number(stored("privat-target-eur", String(DEFAULT_TARGET_EUR))) || DEFAULT_TARGET_EUR;
+let targetDate = stored("privat-target-date", "") || "";
 let panes = [];
 
 function resolvedTheme() {
@@ -69,6 +70,15 @@ function persist() {
   localStorage.setItem("privat-chart-style", chartStyle);
   localStorage.setItem("privat-theme", themePref);
   localStorage.setItem("privat-target-eur", String(targetEur));
+  if (targetDate) localStorage.setItem("privat-target-date", targetDate);
+  else localStorage.removeItem("privat-target-date");
+}
+
+function adviceOpts() {
+  return {
+    targetEur: currentTargetEur(),
+    targetDate: targetDate || latest?.targetDate || null,
+  };
 }
 
 function currentTargetEur() {
@@ -126,7 +136,7 @@ function renderLatest() {
   const spread = latest.spread || {};
   const rows = visibleRows();
   const amount = currentTargetEur();
-  const advice = todayAdvice(latest, rows.length ? rows : history, { targetEur: amount });
+  const advice = todayAdvice(latest, rows.length ? rows : history, adviceOpts());
   const badge = document.getElementById("badge");
   const extra =
     advice.extraUah == null ? "" : ` · ${Math.round(advice.extraUah)} грн`;
@@ -142,6 +152,28 @@ function renderLatest() {
   document.getElementById("p24Eur").textContent = fmt(latest.p24?.EUR?.sale, 5);
   document.getElementById("rateUsd")?.classList.toggle("hot", advice.sellUsd);
   document.getElementById("rateEur")?.classList.toggle("hot", advice.buyEur);
+  const insights = document.getElementById("insights");
+  const dayLine = document.getElementById("dayLine");
+  const cashLine = document.getElementById("cashLine");
+  const horizonLine = document.getElementById("horizonLine");
+  if (dayLine) {
+    dayLine.hidden = advice.dayDelta == null;
+    if (advice.dayDelta != null) {
+      const sign = advice.dayDelta >= 0 ? "+" : "";
+      dayLine.textContent = `За день: ${sign}${advice.dayDelta.toFixed(2)} п.п.`;
+    }
+  }
+  if (cashLine) {
+    cashLine.hidden = !advice.cash?.verdict;
+    cashLine.textContent = advice.cash?.verdict || "";
+  }
+  if (horizonLine) {
+    horizonLine.hidden = !advice.waitText;
+    horizonLine.textContent = advice.waitText || "";
+  }
+  if (insights) {
+    insights.hidden = Boolean(dayLine?.hidden && cashLine?.hidden && horizonLine?.hidden);
+  }
   const ts = latest.ts ? new Date(latest.ts).toLocaleString("uk-UA") : "ще не було запуску";
   document.getElementById("meta").textContent =
     `${advice.action} · оновлено ${ts} · поріг ${fmtPct(latest.thresholdPct)}`;
@@ -182,6 +214,7 @@ function renderAnalysis() {
   const notes = analyze(rows.length ? rows : history, {
     ...latest,
     targetEur: currentTargetEur(),
+    targetDate: targetDate || latest.targetDate || null,
   });
   list.replaceChildren(
     ...notes.map((note) => {
@@ -296,7 +329,18 @@ function bindUi() {
       }
     });
   }
-  document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
+  const dateInput = document.getElementById("dateInput");
+  if (dateInput) {
+    dateInput.value = targetDate;
+    dateInput.addEventListener("input", () => {
+      targetDate = dateInput.value || "";
+      persist();
+      if (latest) {
+        renderLatest();
+        renderAnalysis();
+      }
+    });
+  }
   document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
   document.getElementById("calcModal")?.addEventListener("click", (event) => {
     if (event.target.id === "calcModal") setModalOpen(false);
@@ -341,6 +385,11 @@ bindUi();
 async function boot() {
   try {
     latest = JSON.parse(await loadFirst(["./data/latest.json", "../data/latest.json"]));
+    if (!targetDate && latest.targetDate) {
+      targetDate = latest.targetDate;
+      const dateInput = document.getElementById("dateInput");
+      if (dateInput) dateInput.value = targetDate;
+    }
     renderLatest();
     renderCalc();
     const historyText = await loadFirst(["./data/history.jsonl", "../data/history.jsonl"]);

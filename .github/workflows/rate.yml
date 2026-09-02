@@ -44,6 +44,8 @@ jobs:
           SPREAD_THRESHOLD_PCT: ${{ vars.SPREAD_THRESHOLD_PCT }}
           NOTIFY_TOP_PCT: ${{ vars.NOTIFY_TOP_PCT }}
           TARGET_EUR: ${{ vars.TARGET_EUR }}
+          TARGET_DATE: ${{ vars.TARGET_DATE }}
+          NOTIFY_IMPROVE_PP: ${{ vars.NOTIFY_IMPROVE_PP }}
           NOTIFY_COOLDOWN_HOURS: ${{ vars.NOTIFY_COOLDOWN_HOURS }}
           NOTIFY_ERRORS: ${{ vars.NOTIFY_ERRORS }}
         run: node engine/index.mjs

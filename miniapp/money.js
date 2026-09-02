@@ -39,6 +39,173 @@ export function percentileRank(value, values) {
   return (below / nums.length) * 100;
 }
 
+export function kyivYmd(ts = Date.now()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ts));
+}
+
+export function daysUntil(isoDate, now = Date.now()) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return null;
+  const today = kyivYmd(now);
+  return Math.round(
+    (Date.parse(`${isoDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000,
+  );
+}
+
+export function daysWord(n) {
+  const abs = Math.abs(n);
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} день`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} дні`;
+  return `${n} днів`;
+}
+
+export function sideSignals(latest, rows = [], { usdPct = 70, eurPct = 30 } = {}) {
+  const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
+  const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
+  const usdRank = percentileRank(latest?.business?.USD?.buy, usd);
+  const eurRank = percentileRank(latest?.p24?.EUR?.sale, eur);
+  return {
+    usdRank: usdRank == null ? null : Math.round(usdRank * 10) / 10,
+    eurRank: eurRank == null ? null : Math.round(eurRank * 10) / 10,
+    sellUsd: usdRank != null && usdRank >= usdPct,
+    buyEur: eurRank != null && eurRank <= eurPct,
+  };
+}
+
+function dayBaseline(rows, nowTs) {
+  const today = kyivYmd(nowTs);
+  const dated = rows
+    .filter((r) => r.ts && r.spread?.edgePct != null)
+    .map((r) => ({ row: r, ts: Date.parse(r.ts), day: kyivYmd(Date.parse(r.ts)) }))
+    .filter((x) => Number.isFinite(x.ts))
+    .sort((a, b) => a.ts - b.ts);
+  const todays = dated.filter((x) => x.day === today);
+  if (todays.length) return todays[0].row;
+  const prev = dated.filter((x) => x.day < today);
+  return prev.length ? prev[prev.length - 1].row : null;
+}
+
+export function dayDeltaPct(latest, rows = []) {
+  const nowTs = Date.parse(latest?.ts) || Date.now();
+  const past = rows.filter((r) => r.ts !== latest?.ts);
+  const base = dayBaseline(past, nowTs);
+  if (base?.spread?.edgePct == null || latest?.spread?.edgePct == null) return null;
+  return Math.round((latest.spread.edgePct - base.spread.edgePct) * 100) / 100;
+}
+
+export function dailyBestEdges(rows = []) {
+  const byDay = new Map();
+  for (const row of rows) {
+    if (row.spread?.edgePct == null || !row.ts) continue;
+    const ts = Date.parse(row.ts);
+    if (!Number.isFinite(ts)) continue;
+    const day = kyivYmd(ts);
+    const prev = byDay.get(day);
+    if (prev == null || row.spread.edgePct > prev) byDay.set(day, row.spread.edgePct);
+  }
+  return [...byDay.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, edgePct]) => ({ date, edgePct }));
+}
+
+export function waitHorizon({ edgePct, daysLeft, dailyEdges = [], improvePp = 0.3 } = {}) {
+  if (daysLeft == null) return null;
+  const left = daysWord(daysLeft);
+  if (daysLeft < 0) {
+    return { wait: false, text: `Цільова дата вже минула (${left} тому).` };
+  }
+  if (daysLeft === 0) {
+    return { wait: false, text: "Сьогодні цільова дата — краще конвертувати зараз." };
+  }
+  const edges = dailyEdges.map((d) => d.edgePct).filter((v) => v != null && !Number.isNaN(v));
+  if (edges.length < 8 || edgePct == null) {
+    return { wait: null, text: `До дати ще ${left}. Історії мало, щоб сказати, чи варто чекати.` };
+  }
+  const sorted = [...edges].sort((a, b) => a - b);
+  const p80 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.8))];
+  const median = sorted[Math.floor(sorted.length / 2)];
+  if (edgePct >= p80) {
+    return {
+      wait: false,
+      text: `До дати ще ${left}, але сьогодні вже топ-20% днів. Чекати майже не має сенсу.`,
+    };
+  }
+  let better = 0;
+  let total = 0;
+  const span = Math.max(1, daysLeft);
+  for (let i = 0; i + span <= edges.length; i += 1) {
+    const windowMax = Math.max(...edges.slice(i, i + span));
+    total += 1;
+    if (windowMax >= edgePct + improvePp) better += 1;
+  }
+  const pct = total ? Math.round((better / total) * 100) : null;
+  if (daysLeft >= 5 && pct != null && pct >= 40) {
+    return {
+      wait: true,
+      text: `Зачекати ще ${left} має сенс, якщо ловиш день кращий щонайменше на ${improvePp} п.п.: у ${pct}% таких вікон він був.`,
+    };
+  }
+  if (edgePct < median && daysLeft >= 3) {
+    return {
+      wait: true,
+      text: `До дати ще ${left}. Зараз гірше медіани — є місце почекати, але гарантії кращого дня немає.`,
+    };
+  }
+  return {
+    wait: false,
+    text: `До дати ще ${left}. Різкого покращення історія не обіцяє — можна конвертувати.`,
+  };
+}
+
+export function cashCompare(latest, targetEur) {
+  const card = latest?.p24?.EUR?.sale;
+  const cash = latest?.marketCash?.EUR?.sale;
+  if (!card || !cash) return null;
+  const diff = card - cash;
+  const extraUah = targetEur ? diff * targetEur : null;
+  const usd = latest?.business?.USD?.buy;
+  const chainCard = usd ? usd / card : null;
+  const chainCash = usd ? usd / cash : null;
+  const cardVsCashPct =
+    chainCard && chainCash ? (chainCard / chainCash - 1) * 100 : null;
+  let verdict;
+  if (Math.abs(diff) < 0.05) {
+    verdict = "Картка EUR майже як готівка Приват — різниці майже немає.";
+  } else if (diff > 0) {
+    const extra =
+      extraUah != null ? ` (+${Math.round(extraUah)} грн на ${targetEur} EUR)` : "";
+    verdict = `Картка EUR дорожча за готівку Приват на ${diff.toFixed(2)} грн${extra}. Картка не грає, якщо можеш купити кеш.`;
+  } else {
+    verdict = `Картка EUR дешевша за готівку Приват на ${Math.abs(diff).toFixed(2)} грн — картка грає.`;
+  }
+  return {
+    cashEurSale: cash,
+    cardEurSale: card,
+    diff: Math.round(diff * 10000) / 10000,
+    extraUah: extraUah == null ? null : Math.round(extraUah),
+    cardVsCashPct: cardVsCashPct == null ? null : Math.round(cardVsCashPct * 100) / 100,
+    plays: diff <= 0.05,
+    verdict,
+    source: latest.marketCash?.source || "privat-cash",
+  };
+}
+
+export function notifyKinds(snapshot, { improvePp = 0.3 } = {}) {
+  const kinds = [];
+  if (snapshot.spread?.favorable) kinds.push("chain");
+  if (snapshot.sides?.sellUsd) kinds.push("sell-usd");
+  if (snapshot.sides?.buyEur) kinds.push("buy-eur");
+  const pp = snapshot.improvePp ?? improvePp;
+  if (snapshot.dayDelta != null && snapshot.dayDelta >= pp) kinds.push("improved");
+  return kinds;
+}
+
 export function cutoffMs(range) {
   const now = Date.now();
   if (range === "24h") return now - 24 * 3600 * 1000;
@@ -217,22 +384,16 @@ export function costBit(plan) {
   return `Доплата ≈ ${Math.round(plan.extraUah)} грн на ${plan.eurAmount} EUR.`;
 }
 
-export function todayAdvice(latest, rows = [], { targetEur } = {}) {
+export function todayAdvice(latest, rows = [], { targetEur, targetDate, improvePp } = {}) {
   const spread = latest?.spread || {};
-  const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
-  const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
-  const nowUsd = latest?.business?.USD?.buy;
-  const nowEur = latest?.p24?.EUR?.sale;
-  const usdRank = percentileRank(nowUsd, usd);
-  const eurRank = percentileRank(nowEur, eur);
-  const sellUsd = usdRank != null ? usdRank >= 70 : false;
-  const buyEur = eurRank != null ? eurRank <= 30 : false;
-  const chainOk = Boolean(spread.favorable);
+  const sides = sideSignals(latest, rows);
   const amount = Number(targetEur || latest?.targetEur);
+  const date = targetDate || latest?.targetDate || null;
+  const pp = improvePp ?? latest?.improvePp ?? 0.3;
   const plan = planEurPurchase({
     eurAmount: amount,
-    businessUsdBuy: nowUsd,
-    p24EurSale: nowEur,
+    businessUsdBuy: latest?.business?.USD?.buy,
+    p24EurSale: latest?.p24?.EUR?.sale,
     marketUsd: latest?.nbu?.USD,
     marketEur: latest?.nbu?.EUR,
   });
@@ -241,46 +402,82 @@ export function todayAdvice(latest, rows = [], { targetEur } = {}) {
     (spread.lossPer1000UsdUah == null
       ? ""
       : `Втрата ≈ ${Math.round(spread.lossPer1000UsdUah)} грн на 1000$.`);
+  const dayDelta = dayDeltaPct(latest, rows);
+  const cash = cashCompare(latest, amount);
+  const daysLeft = daysUntil(date, Date.parse(latest?.ts) || Date.now());
+  const horizon = waitHorizon({
+    edgePct: spread.edgePct,
+    daysLeft,
+    dailyEdges: dailyBestEdges(rows),
+    improvePp: pp,
+  });
+  const waitBit = horizon?.text || "";
+  const cashBit = cash?.verdict || "";
+  const chainOk = Boolean(spread.favorable);
 
   let out;
-  if (chainOk || (sellUsd && buyEur)) {
+  if (sides.sellUsd && sides.buyEur) {
     out = {
       status: "do",
-      sellUsd: true,
-      buyEur: true,
-      title: "Сьогодні вигідно",
-      action: `Продай USD на ФОП і купи EUR у Приват24. ${extraBit}`.trim(),
+      title: "Вигідно і продати USD, і купити EUR",
+      action: `Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. ${extraBit}`.trim(),
     };
-  } else if (sellUsd) {
+  } else if (sides.sellUsd) {
     out = {
       status: "partial",
-      sellUsd: true,
-      buyEur: false,
       title: "Вигідно продати USD",
       action: `Продай долар на ФОП (курс високий). Євро поки не купуй — відносно дороге. ${extraBit}`.trim(),
     };
-  } else if (buyEur) {
+  } else if (sides.buyEur) {
     out = {
       status: "partial",
-      sellUsd: false,
-      buyEur: true,
       title: "Вигідно купити EUR",
       action: `Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. ${extraBit}`.trim(),
+    };
+  } else if (chainOk) {
+    out = {
+      status: "do",
+      title: "Спред у межах порогу",
+      action: `Ланцюжок USD→EUR ок, але жоден бік не в історичному піку. Можна конвертувати через спред. ${extraBit}`.trim(),
+    };
+  } else if (dayDelta != null && dayDelta >= pp) {
+    out = {
+      status: "partial",
+      title: `Стало краще на ${dayDelta.toFixed(1)} п.п. за день`,
+      action: `Поріг ще не перетнуто, але спред покращився. ${extraBit}`.trim(),
     };
   } else {
     out = {
       status: "wait",
-      sellUsd: false,
-      buyEur: false,
       title: "Сьогодні не вигідно",
       action: `Не конвертуй USD→EUR. ${extraBit || "Зачекай кращий спред."}`.trim(),
     };
   }
-  return { ...out, plan, extraUah: plan?.extraUah ?? null, targetEur: plan?.eurAmount ?? amount ?? null };
+
+  return {
+    ...out,
+    sellUsd: sides.sellUsd,
+    buyEur: sides.buyEur,
+    usdRank: sides.usdRank,
+    eurRank: sides.eurRank,
+    plan,
+    extraUah: plan?.extraUah ?? null,
+    targetEur: plan?.eurAmount ?? amount ?? null,
+    targetDate: date,
+    daysLeft,
+    waitText: waitBit || null,
+    dayDelta,
+    cash,
+    improvePp: pp,
+  };
 }
 
 export function buildAdviceFile(snapshot, rows = [], targetEur) {
-  const advice = todayAdvice(snapshot, rows, { targetEur });
+  const advice = todayAdvice(snapshot, rows, {
+    targetEur,
+    targetDate: snapshot.targetDate,
+    improvePp: snapshot.improvePp,
+  });
   const plan = advice.plan;
   const profile = snapshot.profile;
   const round0 = (n) => (n == null || Number.isNaN(n) ? null : Math.round(n));
@@ -292,19 +489,28 @@ export function buildAdviceFile(snapshot, rows = [], targetEur) {
     action: advice.action,
     sellUsd: advice.sellUsd,
     buyEur: advice.buyEur,
+    usdRank: advice.usdRank,
+    eurRank: advice.eurRank,
     edgePct: snapshot.spread?.edgePct ?? null,
     favorable: Boolean(snapshot.spread?.favorable),
     byThreshold: Boolean(snapshot.spread?.byThreshold),
     byTopDays: Boolean(snapshot.spread?.byTopDays),
     edgeRank: snapshot.spread?.edgeRank ?? null,
     thresholdPct: snapshot.thresholdPct ?? null,
+    dayDelta: advice.dayDelta,
     targetEur: plan?.eurAmount ?? targetEur ?? null,
+    targetDate: advice.targetDate,
+    daysLeft: advice.daysLeft,
+    waitText: advice.waitText,
     extraUah: profile?.extraUah ?? round0(plan?.extraUah),
     extraUsd: profile?.extraUsd ?? round2(plan?.extraUsd),
     usdFop: profile?.usdFop ?? round2(plan?.usdFop),
     uahNeeded: profile?.uahNeeded ?? round0(plan?.uahNeeded),
     businessUsdBuy: snapshot.business?.USD?.buy ?? null,
     p24EurSale: snapshot.p24?.EUR?.sale ?? null,
+    cashEurSale: advice.cash?.cashEurSale ?? snapshot.marketCash?.EUR?.sale ?? null,
+    cardVsCashPct: advice.cash?.cardVsCashPct ?? null,
+    cashVerdict: advice.cash?.verdict ?? null,
     chainEurPerUsd: snapshot.spread?.chainEurPerUsd ?? null,
     marketEurPerUsd: snapshot.spread?.marketEurPerUsd ?? null,
     lossPer1000UsdUah: snapshot.spread?.lossPer1000UsdUah ?? null,
@@ -378,16 +584,59 @@ export function edgeMarkers(candles) {
 }
 
 export function analyze(rows, latest) {
-  const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
-  const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
-  const nowUsd = latest.business?.USD?.buy;
-  const nowEur = latest.p24?.EUR?.sale;
-  const usdRank = percentileRank(nowUsd, usd);
-  const eurRank = percentileRank(nowEur, eur);
   const notes = [];
-  const advice = todayAdvice(latest, rows, { targetEur: latest.targetEur });
+  const advice = todayAdvice(latest, rows, {
+    targetEur: latest.targetEur,
+    targetDate: latest.targetDate,
+    improvePp: latest.improvePp,
+  });
 
-  notes.push({ text: `${advice.title}. ${advice.action}`, tone: advice.status === "wait" ? "wait" : advice.sellUsd && advice.buyEur ? "both" : advice.sellUsd ? "sell" : advice.buyEur ? "buy" : "info" });
+  notes.push({
+    text: `${advice.title}. ${advice.action}`,
+    tone:
+      advice.status === "wait"
+        ? "wait"
+        : advice.sellUsd && advice.buyEur
+          ? "both"
+          : advice.sellUsd
+            ? "sell"
+            : advice.buyEur
+              ? "buy"
+              : advice.status === "do"
+                ? "both"
+                : "info",
+  });
+
+  if (advice.sellUsd !== advice.buyEur) {
+    notes.push({
+      tone: advice.sellUsd ? "sell" : "buy",
+      text: advice.sellUsd
+        ? `Боки розійшлись: продаж USD вигідний (перцентиль ${advice.usdRank?.toFixed?.(0) ?? "—"}), купівля EUR — ні.`
+        : `Боки розійшлись: купівля EUR вигідна (перцентиль ${advice.eurRank?.toFixed?.(0) ?? "—"}), продаж USD — ні.`,
+    });
+  }
+
+  if (advice.dayDelta != null) {
+    const sign = advice.dayDelta >= 0 ? "+" : "";
+    notes.push({
+      tone: advice.dayDelta >= 0.3 ? "both" : "info",
+      text: `За день спред ${sign}${advice.dayDelta.toFixed(2)} п.п.`,
+    });
+  }
+
+  if (advice.waitText) {
+    notes.push({
+      tone: advice.status === "wait" && advice.daysLeft >= 5 ? "wait" : "info",
+      text: advice.waitText,
+    });
+  }
+
+  if (advice.cash?.verdict) {
+    notes.push({
+      tone: advice.cash.plays ? "buy" : "wait",
+      text: advice.cash.verdict,
+    });
+  }
 
   if (rows.some((r) => r.backfill)) {
     const estimated = rows.filter((r) => r.p24Estimated).length;
@@ -406,35 +655,23 @@ export function analyze(rows, latest) {
     });
   }
 
-  if (usdRank != null) {
-    const sellNow = usdRank >= 70;
+  const nowUsd = latest.business?.USD?.buy;
+  const nowEur = latest.p24?.EUR?.sale;
+  if (advice.usdRank != null && nowUsd != null) {
     notes.push({
-      tone: sellNow ? "sell" : "wait",
-      text: sellNow
-        ? `USD: купівля ФОП ${nowUsd.toFixed(4)} — вище за ${usdRank.toFixed(0)}% історії. Зараз вигідно продавати долар (більше гривень).`
-        : `USD: купівля ФОП ${nowUsd.toFixed(4)} — лише ${usdRank.toFixed(0)}-й перцентиль. Можна почекати вищий курс продажу.`,
+      tone: advice.sellUsd ? "sell" : "wait",
+      text: advice.sellUsd
+        ? `USD: купівля ФОП ${nowUsd.toFixed(4)} — вище за ${advice.usdRank.toFixed(0)}% історії. Зараз вигідно продавати долар (більше гривень).`
+        : `USD: купівля ФОП ${nowUsd.toFixed(4)} — лише ${advice.usdRank.toFixed(0)}-й перцентиль. Можна почекати вищий курс продажу.`,
     });
   }
 
-  if (eurRank != null) {
-    const buyNow = eurRank <= 30;
+  if (advice.eurRank != null && nowEur != null) {
     notes.push({
-      tone: buyNow ? "buy" : "wait",
-      text: buyNow
-        ? `EUR: продаж P24 ${nowEur.toFixed(4)} — дешевше, ніж у ${(100 - eurRank).toFixed(0)}% історії. Зараз вигідно купувати євро.`
-        : `EUR: продаж P24 ${nowEur.toFixed(4)} — дорожче за ${eurRank.toFixed(0)}% історії. Купівля зараз відносно дорога.`,
-    });
-  }
-
-  if (usdRank != null && eurRank != null && usdRank >= 70 && eurRank <= 30) {
-    notes.push({
-      tone: "both",
-      text: "Обидва боки збіглись: і продаж USD, і купівля EUR зараз в історично вигідній зоні.",
-    });
-  } else if (latest.spread?.favorable) {
-    notes.push({
-      tone: "both",
-      text: "Ланцюжок USD→EUR зараз у межах твого порогу вигідності.",
+      tone: advice.buyEur ? "buy" : "wait",
+      text: advice.buyEur
+        ? `EUR: продаж P24 ${nowEur.toFixed(4)} — дешевше, ніж у ${(100 - advice.eurRank).toFixed(0)}% історії. Зараз вигідно купувати євро.`
+        : `EUR: продаж P24 ${nowEur.toFixed(4)} — дорожче за ${advice.eurRank.toFixed(0)}% історії. Купівля зараз відносно дорога.`,
     });
   }
 

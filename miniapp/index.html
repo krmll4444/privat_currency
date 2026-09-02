@@ -47,6 +47,11 @@
           <b id="p24Eur">—</b>
         </div>
       </section>
+      <section class="insights" id="insights" hidden>
+        <p id="dayLine"></p>
+        <p id="cashLine"></p>
+        <p id="horizonLine"></p>
+      </section>
 
       <button type="button" class="btn-modal" id="openCalc">Калькулятор втрат</button>
 
@@ -128,6 +133,12 @@
           <span class="calc-input-wrap">
             <input id="eurInput" type="number" min="0" step="50" value="2000" inputmode="decimal" />
             <span class="calc-suffix">EUR</span>
+          </span>
+        </label>
+        <label class="calc-field" for="dateInput">
+          Цільова дата (поїздка / платіж)
+          <span class="calc-input-wrap">
+            <input id="dateInput" type="date" />
           </span>
         </label>
         <div class="calc-out">

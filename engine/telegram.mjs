@@ -1,3 +1,5 @@
+import { notifyKinds } from "../miniapp/money.js";
+
 const API = "https://api.telegram.org";
 
 export async function sendTelegram(text) {
@@ -31,8 +33,22 @@ function fmt(n, digits = 4) {
   return Number(n).toFixed(digits);
 }
 
+function rankUsd(rank) {
+  if (rank == null) return "";
+  return ` (${fmt(rank, 0)}-й перцентиль)`;
+}
+
+function rankEur(rank) {
+  if (rank == null) return "";
+  return rank <= 30
+    ? ` (дешевше, ніж у ${fmt(100 - rank, 0)}% історії)`
+    : ` (${fmt(rank, 0)}-й перцентиль)`;
+}
+
 export function formatAlert(snapshot) {
-  const s = snapshot.spread;
+  const s = snapshot.spread || {};
+  const sides = snapshot.sides || {};
+  const advice = snapshot.advice || {};
   const biz = snapshot.business;
   const p24 = snapshot.p24;
   const sign = s.edgePct >= 0 ? "+" : "";
@@ -45,9 +61,22 @@ export function formatAlert(snapshot) {
     extraUah != null && targetEur
       ? `Доплата на ${targetEur} EUR: ~${fmt(extraUah, 0)} грн`
       : `Втрата на 1000 USD: ~${fmt(s.lossPer1000UsdUah, 0)} грн`;
+  const usdLine = sides.sellUsd
+    ? `USD ФОП: <b>вигідно продати</b>${rankUsd(sides.usdRank)}`
+    : `USD ФОП: не пік продажу${rankUsd(sides.usdRank)}`;
+  const eurLine = sides.buyEur
+    ? `EUR картка: <b>вигідно купити</b>${rankEur(sides.eurRank)}`
+    : `EUR картка: поки дорого${rankEur(sides.eurRank)}`;
+  const dayLine =
+    snapshot.dayDelta == null
+      ? null
+      : `За день: <b>${snapshot.dayDelta >= 0 ? "+" : ""}${fmt(snapshot.dayDelta, 2)} п.п.</b>`;
 
   return [
-    "<b>Вигідне вікно USD → EUR</b>",
+    `<b>${advice.title || "Сигнал USD → EUR"}</b>`,
+    "",
+    usdLine,
+    eurLine,
     "",
     `ФОП USD buy: <code>${fmt(biz?.USD?.buy, 4)}</code>`,
     `P24 EUR sale: <code>${fmt(p24?.EUR?.sale, 5)}</code>`,
@@ -55,7 +84,12 @@ export function formatAlert(snapshot) {
     `НБУ: 1 USD → ${fmt(s.marketEurPerUsd, 5)} EUR`,
     `Відхилення: <b>${sign}${fmt(s.edgePct, 2)}%</b> (${why})`,
     extraLine,
-  ].join("\n");
+    dayLine,
+    snapshot.cash?.verdict || null,
+    advice.waitText || null,
+  ]
+    .filter((line) => line != null)
+    .join("\n");
 }
 
 export function formatError(err) {
@@ -69,13 +103,26 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;");
 }
 
-export function shouldNotify(snapshot, state, cooldownHours) {
-  if (!snapshot.spread?.favorable) return { send: false, reason: "not-favorable" };
+export function shouldNotify(snapshot, state, cooldownHours, { improvePp = 0.3 } = {}) {
+  const kinds = notifyKinds(snapshot, { improvePp: snapshot.improvePp ?? improvePp });
+  if (!kinds.length) return { send: false, reason: "quiet", kinds };
 
   const lastAt = state.lastNotifyAt ? Date.parse(state.lastNotifyAt) : 0;
   const cooldownMs = cooldownHours * 3600 * 1000;
-  if (lastAt && Date.now() - lastAt < cooldownMs) {
-    return { send: false, reason: "cooldown" };
-  }
-  return { send: true, reason: "favorable" };
+  const cooled = !lastAt || Date.now() - lastAt >= cooldownMs;
+  const lastKinds = new Set(
+    state.lastNotifyKinds || (state.lastNotifyKind ? [state.lastNotifyKind] : []),
+  );
+  const fresh = kinds.filter((k) => !lastKinds.has(k));
+  const pp = snapshot.improvePp ?? improvePp;
+  const improvedEnough =
+    snapshot.spread?.edgePct != null &&
+    state.lastEdgePct != null &&
+    snapshot.spread.edgePct - state.lastEdgePct >= pp;
+
+  if (cooled) return { send: true, reason: kinds[0], kinds };
+  if (!lastKinds.size) return { send: false, reason: "cooldown", kinds };
+  const usable = fresh.filter((k) => k !== "improved" || improvedEnough || state.lastEdgePct == null);
+  if (usable.length) return { send: true, reason: usable[0], kinds: usable };
+  return { send: false, reason: "cooldown", kinds };
 }

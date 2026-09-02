@@ -18,7 +18,11 @@ import {
 import {
   applyRankFavorable,
   buildAdviceFile,
+  cashCompare,
+  dayDeltaPct,
   planEurPurchase,
+  sideSignals,
+  todayAdvice,
 } from "../miniapp/money.js";
 
 loadEnv();
@@ -38,6 +42,8 @@ async function main() {
   const cooldownHours = envNumber("NOTIFY_COOLDOWN_HOURS", 6);
   const targetEur = envNumber("TARGET_EUR", 2000);
   const notifyTopPct = envNumber("NOTIFY_TOP_PCT", 10);
+  const improvePp = envNumber("NOTIFY_IMPROVE_PP", 0.3);
+  const targetDate = (process.env.TARGET_DATE || "").trim() || null;
 
   const history = await readHistory();
   const { p24, market, nbu, business } = await fetchAll();
@@ -66,7 +72,9 @@ async function main() {
     ts: new Date().toISOString(),
     thresholdPct,
     targetEur,
+    targetDate,
     notifyTopPct,
+    improvePp,
     p24: {
       USD: snapshotRates(p24.USD),
       EUR: snapshotRates(p24.EUR),
@@ -79,6 +87,7 @@ async function main() {
     marketCash: {
       USD: snapshotRates(market.USD),
       EUR: snapshotRates(market.EUR),
+      source: "privat-cash",
     },
     nbu: {
       USD: round(nbu.USD, 4),
@@ -106,12 +115,22 @@ async function main() {
   };
 
   const rows = [...history, snapshot];
+  snapshot.sides = sideSignals(snapshot, rows);
+  snapshot.dayDelta = dayDeltaPct(snapshot, history);
+  snapshot.cash = cashCompare(snapshot, targetEur);
+  const advice = todayAdvice(snapshot, rows, { targetEur, targetDate, improvePp });
+  snapshot.advice = {
+    title: advice.title,
+    action: advice.action,
+    waitText: advice.waitText,
+  };
+
   await writeLatest(snapshot);
   await appendHistory(snapshot);
   await writeAdvice(buildAdviceFile(snapshot, rows, targetEur));
 
   const state = await readState();
-  const decision = shouldNotify(snapshot, state, cooldownHours);
+  const decision = shouldNotify(snapshot, state, cooldownHours, { improvePp });
 
   console.log(
     JSON.stringify(
@@ -122,6 +141,8 @@ async function main() {
         byThreshold: snapshot.spread.byThreshold,
         byTopDays: snapshot.spread.byTopDays,
         extraUah: snapshot.profile?.extraUah ?? null,
+        sides: snapshot.sides,
+        dayDelta: snapshot.dayDelta,
         notify: decision,
       },
       null,
@@ -135,6 +156,8 @@ async function main() {
       ...state,
       lastNotifyAt: snapshot.ts,
       lastEdgePct: snapshot.spread.edgePct,
+      lastNotifyKind: decision.reason,
+      lastNotifyKinds: decision.kinds,
     });
   }
 }
