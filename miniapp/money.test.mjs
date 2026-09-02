@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -51,4 +51,36 @@ test("сектори вигоди: плюс / нуль / мін. втрата", 
   assert.equal(bars[0].value, 1);
   assert.equal(bars[1].value, 1);
   assert.equal(bars[2].value, 0);
+});
+
+test("порада на сьогодні: чекати, якщо спред поганий", () => {
+  const advice = todayAdvice(
+    {
+      business: { USD: { buy: 40 } },
+      p24: { EUR: { sale: 55 } },
+      spread: { favorable: false, lossPer1000UsdUah: 800, edgePct: -2 },
+    },
+    [
+      { business: { USD: { buy: 44 } }, p24: { EUR: { sale: 50 } }, spread: { edgePct: -0.4 } },
+      { business: { USD: { buy: 45 } }, p24: { EUR: { sale: 51 } }, spread: { edgePct: -0.5 } },
+    ],
+  );
+  assert.equal(advice.status, "wait");
+  assert.match(advice.title, /не вигідно/i);
+});
+
+test("аналіз віддає тон для підсвітки абзаців", () => {
+  const notes = analyze(
+    [
+      { ts: "2026-01-01T00:00:00Z", business: { USD: { buy: 44 } }, p24: { EUR: { sale: 51 } }, spread: { edgePct: -0.4, favorable: true } },
+      { ts: "2026-01-02T00:00:00Z", business: { USD: { buy: 45 } }, p24: { EUR: { sale: 50 } }, spread: { edgePct: -0.3, favorable: true } },
+    ],
+    {
+      business: { USD: { buy: 45 } },
+      p24: { EUR: { sale: 50 } },
+      spread: { favorable: true, edgePct: -0.3, lossPer1000UsdUah: 120 },
+    },
+  );
+  assert.ok(notes.every((n) => n.text && n.tone));
+  assert.ok(notes.some((n) => n.tone === "sell" || n.tone === "both" || n.tone === "buy"));
 });

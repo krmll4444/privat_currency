@@ -4,20 +4,86 @@ import {
   eurMarkers,
   edgeMarkers,
   favorHistogram,
+  favorHints,
   fmt,
   fmtPct,
   planEurPurchase,
+  snapByInterval,
   toCandles,
+  todayAdvice,
   usdMarkers,
 } from "./money.js";
-import { createPane, destroyPanes, setPane, syncCharts } from "./charts.js";
+import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js";
+
+const RANGE_LABEL = {
+  "24h": "24 год",
+  "7d": "7 днів",
+  "30d": "30 днів",
+  "90d": "3 міс",
+  all: "Усе",
+};
+const INTERVAL_LABEL = {
+  900: "15 хв",
+  3600: "1 год",
+  14400: "4 год",
+  86400: "1 день",
+};
+
+const stored = (key, fallback) => localStorage.getItem(key) || fallback;
 
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
-  tg.setHeaderColor?.("#4ea524");
-  tg.setBackgroundColor?.("#f0f3f4");
+}
+
+let latest = null;
+let history = [];
+let range = stored("privat-range", "90d");
+let intervalSec = Number(stored("privat-interval", "86400")) || 86400;
+let chartStyle = stored("privat-chart-style", "candles") === "line" ? "line" : "candles";
+let themePref = ["light", "dark", "auto"].includes(stored("privat-theme", "auto"))
+  ? stored("privat-theme", "auto")
+  : "auto";
+let panes = [];
+
+function resolvedTheme() {
+  if (themePref === "light" || themePref === "dark") return themePref;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme() {
+  const theme = resolvedTheme();
+  document.documentElement.dataset.theme = theme;
+  const bg = theme === "dark" ? "#15191a" : "#f0f3f4";
+  tg?.setHeaderColor?.("#4ea524");
+  tg?.setBackgroundColor?.(bg);
+}
+
+function persist() {
+  localStorage.setItem("privat-range", range);
+  localStorage.setItem("privat-interval", String(intervalSec));
+  localStorage.setItem("privat-chart-style", chartStyle);
+  localStorage.setItem("privat-theme", themePref);
+}
+
+function markPills(rootId, attr, value) {
+  const root = document.getElementById(rootId);
+  if (!root) return;
+  for (const btn of root.querySelectorAll("button")) {
+    btn.classList.toggle("on", String(btn.getAttribute(attr)) === String(value));
+  }
+}
+
+function syncSettings() {
+  markPills("themePills", "data-theme", themePref);
+  markPills("rangePills", "data-range", range);
+  markPills("intervalPills", "data-interval", intervalSec);
+  markPills("stylePills", "data-style", chartStyle);
+  const summary = document.getElementById("chartSummary");
+  if (summary) {
+    summary.textContent = `${RANGE_LABEL[range] || range} · ${INTERVAL_LABEL[intervalSec] || "1 день"}`;
+  }
 }
 
 async function loadFirst(urls) {
@@ -42,26 +108,29 @@ function parseJsonl(text) {
     .map((line) => JSON.parse(line));
 }
 
-let latest = null;
-let history = [];
-let range = "90d";
-let intervalSec = 86400;
-let chartStyle = localStorage.getItem("privat-chart-style") === "line" ? "line" : "candles";
-let panes = [];
+function visibleRows() {
+  const from = cutoffMs(range);
+  return history.filter((row) => row.ts && Date.parse(row.ts) >= from);
+}
 
 function renderLatest() {
   const spread = latest.spread || {};
+  const rows = visibleRows();
+  const advice = todayAdvice(latest, rows.length ? rows : history);
   const badge = document.getElementById("badge");
-  badge.textContent = spread.favorable ? `Вигідно ${fmtPct(spread.edgePct)}` : fmtPct(spread.edgePct);
-  badge.className = `badge ${spread.favorable ? "green" : "gray"}`;
+  badge.textContent = advice.title;
+  badge.className = `badge ${advice.status === "wait" ? "gray" : "green"}`;
   document.getElementById("chain").textContent = `${fmt(spread.chainEurPerUsd, 5)} €`;
   document.getElementById("nbu").textContent = `${fmt(spread.marketEurPerUsd, 5)} €`;
   document.getElementById("loss").textContent =
     spread.lossPer1000UsdUah == null ? "—" : `${Math.round(spread.lossPer1000UsdUah)} грн`;
   document.getElementById("bizUsd").textContent = fmt(latest.business?.USD?.buy, 4);
   document.getElementById("p24Eur").textContent = fmt(latest.p24?.EUR?.sale, 5);
+  document.getElementById("rateUsd")?.classList.toggle("hot", advice.sellUsd);
+  document.getElementById("rateEur")?.classList.toggle("hot", advice.buyEur);
   const ts = latest.ts ? new Date(latest.ts).toLocaleString("uk-UA") : "ще не було запуску";
-  document.getElementById("meta").textContent = `Оновлено: ${ts} · поріг ${fmtPct(latest.thresholdPct)} · зум на графіках`;
+  document.getElementById("meta").textContent =
+    `${advice.action} · оновлено ${ts} · поріг ${fmtPct(latest.thresholdPct)}`;
 }
 
 function renderCalc() {
@@ -95,13 +164,14 @@ function renderCalc() {
 function renderAnalysis() {
   const list = document.getElementById("analysisList");
   if (!list || !latest) return;
-  const from = cutoffMs(range);
-  const rows = history.filter((row) => row.ts && Date.parse(row.ts) >= from);
+  const rows = visibleRows();
   const notes = analyze(rows.length ? rows : history, latest);
   list.replaceChildren(
-    ...notes.map((text) => {
+    ...notes.map((note) => {
       const li = document.createElement("li");
-      li.textContent = text;
+      const item = typeof note === "string" ? { text: note, tone: "info" } : note;
+      li.textContent = item.text;
+      li.className = `tone-${item.tone || "info"}`;
       return li;
     }),
   );
@@ -117,12 +187,15 @@ function points(rows, pick) {
 }
 
 function renderCharts() {
-  const from = cutoffMs(range);
-  const rows = history.filter((row) => row.ts && Date.parse(row.ts) >= from);
+  const rows = visibleRows();
   const usd = toCandles(points(rows, (r) => r.business?.USD?.buy), intervalSec);
   const eur = toCandles(points(rows, (r) => r.p24?.EUR?.sale), intervalSec);
   const edge = toCandles(points(rows, (r) => r.spread?.edgePct), intervalSec);
-  const favor = favorHistogram(edge, latest?.thresholdPct ?? -1);
+  const threshold = latest?.thresholdPct ?? -1;
+  const favor = favorHistogram(edge, threshold);
+  const hints = favorHints(edge, snapByInterval(rows, intervalSec), threshold);
+  const tip = document.getElementById("chartTip");
+  if (tip) tip.hidden = true;
 
   if (panes.length) destroyPanes(panes);
   const style = chartStyle;
@@ -142,12 +215,19 @@ function renderCharts() {
   setPane(panes[0], usd, usdMarkers(usd), favor);
   setPane(panes[1], eur, eurMarkers(eur), favor);
   setPane(panes[2], edge, edgeMarkers(edge), favor);
+  bindFavorHint(panes[0], hints, tip);
+  bindFavorHint(panes[1], hints, tip);
+  bindFavorHint(panes[2], hints, tip);
   syncCharts(panes);
 }
 
-function syncStyleRadios() {
-  for (const input of document.querySelectorAll('input[name="chartStyle"]')) {
-    input.checked = input.value === chartStyle;
+function refresh() {
+  persist();
+  syncSettings();
+  if (latest) {
+    renderLatest();
+    renderAnalysis();
+    renderCharts();
   }
 }
 
@@ -157,20 +237,6 @@ function setSettingsOpen(open) {
   if (!menu || !btn) return;
   menu.hidden = !open;
   btn.setAttribute("aria-expanded", open ? "true" : "false");
-}
-
-function bindToggles(rootId, attr, apply) {
-  const root = document.getElementById(rootId);
-  root?.addEventListener("click", (event) => {
-    const btn = event.target.closest(`button[${attr}]`);
-    if (!btn) return;
-    for (const el of root.querySelectorAll("button")) {
-      el.classList.toggle("on", el === btn);
-    }
-    apply(btn);
-    renderAnalysis();
-    renderCharts();
-  });
 }
 
 function setModalOpen(open) {
@@ -185,7 +251,18 @@ function setModalOpen(open) {
   }
 }
 
+function bindPills(rootId, onPick) {
+  document.getElementById(rootId)?.addEventListener("click", (event) => {
+    const btn = event.target.closest("button");
+    if (!btn) return;
+    onPick(btn);
+    refresh();
+  });
+}
+
 function bindUi() {
+  applyTheme();
+  syncSettings();
   document.getElementById("eurInput")?.addEventListener("input", renderCalc);
   document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
   document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
@@ -206,31 +283,24 @@ function bindUi() {
     const menu = document.getElementById("chartSettingsMenu");
     setSettingsOpen(Boolean(menu?.hidden));
   });
-  document.getElementById("chartSettingsMenu")?.addEventListener("change", (event) => {
-    const input = event.target;
-    if (input.name !== "chartStyle") return;
-    chartStyle = input.value === "line" ? "line" : "candles";
-    localStorage.setItem("privat-chart-style", chartStyle);
-    setSettingsOpen(false);
-    renderCharts();
-  });
   document.addEventListener("click", (event) => {
-    const wrap = event.target.closest?.(".settings-wrap");
-    if (!wrap) setSettingsOpen(false);
+    if (!event.target.closest?.(".settings-wrap")) setSettingsOpen(false);
   });
-  syncStyleRadios();
-  bindToggles("ranges", "data-range", (btn) => {
+  bindPills("themePills", (btn) => {
+    themePref = btn.dataset.theme;
+    applyTheme();
+  });
+  bindPills("rangePills", (btn) => {
     range = btn.dataset.range;
-    if (range === "90d" || range === "all") {
-      intervalSec = 86400;
-      const intervals = document.getElementById("intervals");
-      for (const el of intervals?.querySelectorAll("button") ?? []) {
-        el.classList.toggle("on", el.dataset.interval === "86400");
-      }
-    }
   });
-  bindToggles("intervals", "data-interval", (btn) => {
+  bindPills("intervalPills", (btn) => {
     intervalSec = Number(btn.dataset.interval);
+  });
+  bindPills("stylePills", (btn) => {
+    chartStyle = btn.dataset.style === "line" ? "line" : "candles";
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (themePref === "auto") applyTheme();
   });
 }
 
@@ -243,6 +313,7 @@ async function boot() {
     renderCalc();
     const historyText = await loadFirst(["./data/history.jsonl", "../data/history.jsonl"]);
     history = parseJsonl(historyText);
+    renderLatest();
     renderAnalysis();
     renderCharts();
   } catch (err) {

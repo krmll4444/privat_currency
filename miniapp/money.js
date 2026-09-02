@@ -146,6 +146,108 @@ export function favorHistogram(edgeCandles, thresholdPct = -1) {
   });
 }
 
+export function snapByInterval(rows, intervalSec) {
+  const buckets = new Map();
+  for (const row of rows) {
+    const ts = Date.parse(row.ts);
+    if (!Number.isFinite(ts)) continue;
+    const time = Math.floor(ts / 1000 / intervalSec) * intervalSec;
+    buckets.set(time, row);
+  }
+  return buckets;
+}
+
+export function sectorHint(kind, row) {
+  if (!kind || !row) return null;
+  const edge = row.spread?.edgePct;
+  const loss = row.spread?.lossPer1000UsdUah;
+  const lossPct = row.spread?.lossPct;
+  const usd = row.business?.USD?.buy;
+  const eur = row.p24?.EUR?.sale;
+  const lossTxt =
+    loss == null ? "" : `Втрата на 1000$: ≈ ${Math.round(loss)} грн (${Number(lossPct).toFixed(2)}%).`;
+  if (kind === "profit") {
+    return {
+      title: "Заробіток vs НБУ",
+      text: `Ланцюжок кращий за НБУ на ${Number(edge).toFixed(2)}%. Вигідно продати USD на ФОП і купити EUR. ${lossTxt}`.trim(),
+    };
+  }
+  if (kind === "zero") {
+    return {
+      title: "Майже паритет з НБУ",
+      text: `Спред близько 0. Можна конвертувати без зайвої втрати. ${lossTxt} USD ${usd?.toFixed?.(2) ?? "—"} · EUR ${eur?.toFixed?.(2) ?? "—"}.`.trim(),
+    };
+  }
+  return {
+    title: "Мінімальна втрата",
+    text: `Один з кращих моментів продати USD і купити EUR. Відхилення ${Number(edge).toFixed(2)}%. ${lossTxt}`.trim(),
+  };
+}
+
+export function favorHints(edgeCandles, snaps, thresholdPct = -1) {
+  const bars = favorHistogram(edgeCandles, thresholdPct);
+  const out = new Map();
+  for (const bar of bars) {
+    if (!bar.value) continue;
+    const row = snaps.get(bar.time);
+    const kind = sectorKind(row?.spread?.edgePct, thresholdPct) || "low-loss";
+    const hint = sectorHint(kind, row);
+    if (hint) out.set(bar.time, hint);
+  }
+  return out;
+}
+
+export function todayAdvice(latest, rows = []) {
+  const spread = latest?.spread || {};
+  const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
+  const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
+  const nowUsd = latest?.business?.USD?.buy;
+  const nowEur = latest?.p24?.EUR?.sale;
+  const usdRank = percentileRank(nowUsd, usd);
+  const eurRank = percentileRank(nowEur, eur);
+  const sellUsd = usdRank != null ? usdRank >= 70 : false;
+  const buyEur = eurRank != null ? eurRank <= 30 : false;
+  const chainOk = Boolean(spread.favorable);
+  const loss = spread.lossPer1000UsdUah;
+  const lossBit =
+    loss == null ? "" : `Втрата ≈ ${Math.round(loss)} грн на 1000$.`;
+
+  if (chainOk || (sellUsd && buyEur)) {
+    return {
+      status: "do",
+      sellUsd: true,
+      buyEur: true,
+      title: "Сьогодні вигідно",
+      action: `Продай USD на ФОП і купи EUR у Приват24. ${lossBit}`.trim(),
+    };
+  }
+  if (sellUsd) {
+    return {
+      status: "partial",
+      sellUsd: true,
+      buyEur: false,
+      title: "Вигідно продати USD",
+      action: `Продай долар на ФОП (курс високий). Євро поки не купуй — відносно дороге. ${lossBit}`.trim(),
+    };
+  }
+  if (buyEur) {
+    return {
+      status: "partial",
+      sellUsd: false,
+      buyEur: true,
+      title: "Вигідно купити EUR",
+      action: `Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. ${lossBit}`.trim(),
+    };
+  }
+  return {
+    status: "wait",
+    sellUsd: false,
+    buyEur: false,
+    title: "Сьогодні не вигідно",
+    action: `Не конвертуй USD→EUR. ${lossBit || "Зачекай кращий спред."}`.trim(),
+  };
+}
+
 export function usdMarkers(candles) {
   const markers = [];
   for (const i of extrema(candles, { peaks: true })) {
@@ -220,44 +322,57 @@ export function analyze(rows, latest) {
   const usdRank = percentileRank(nowUsd, usd);
   const eurRank = percentileRank(nowEur, eur);
   const notes = [];
+  const advice = todayAdvice(latest, rows);
+
+  notes.push({ text: `${advice.title}. ${advice.action}`, tone: advice.status === "wait" ? "wait" : advice.sellUsd && advice.buyEur ? "both" : advice.sellUsd ? "sell" : advice.buyEur ? "buy" : "info" });
 
   if (rows.some((r) => r.backfill)) {
     const estimated = rows.filter((r) => r.p24Estimated).length;
-    notes.push(
-      estimated
+    notes.push({
+      tone: "info",
+      text: estimated
         ? `Бекфіл: USD ФОП з otp24, картка P24 з архіву Minfin. ${estimated} днів без картки — оцінка націнкою.`
         : "Бекфіл: USD ФОП з otp24 (робочі дні), картковий EUR — з архіву Minfin (курс Приват24).",
-    );
+    });
   }
 
   if (rows.length < 8) {
-    notes.push(
-      "Історії ще мало — після кількох оновлень cron з’являться свічки, койли і надійніший аналіз.",
-    );
+    notes.push({
+      tone: "info",
+      text: "Історії ще мало — після кількох оновлень cron з’являться свічки, койли і надійніший аналіз.",
+    });
   }
 
   if (usdRank != null) {
     const sellNow = usdRank >= 70;
-    notes.push(
-      sellNow
+    notes.push({
+      tone: sellNow ? "sell" : "wait",
+      text: sellNow
         ? `USD: купівля ФОП ${nowUsd.toFixed(4)} — вище за ${usdRank.toFixed(0)}% історії. Зараз вигідно продавати долар (більше гривень).`
         : `USD: купівля ФОП ${nowUsd.toFixed(4)} — лише ${usdRank.toFixed(0)}-й перцентиль. Можна почекати вищий курс продажу.`,
-    );
+    });
   }
 
   if (eurRank != null) {
     const buyNow = eurRank <= 30;
-    notes.push(
-      buyNow
+    notes.push({
+      tone: buyNow ? "buy" : "wait",
+      text: buyNow
         ? `EUR: продаж P24 ${nowEur.toFixed(4)} — дешевше, ніж у ${(100 - eurRank).toFixed(0)}% історії. Зараз вигідно купувати євро.`
         : `EUR: продаж P24 ${nowEur.toFixed(4)} — дорожче за ${eurRank.toFixed(0)}% історії. Купівля зараз відносно дорога.`,
-    );
+    });
   }
 
   if (usdRank != null && eurRank != null && usdRank >= 70 && eurRank <= 30) {
-    notes.push("Обидва боки збіглись: і продаж USD, і купівля EUR зараз в історично вигідній зоні.");
+    notes.push({
+      tone: "both",
+      text: "Обидва боки збіглись: і продаж USD, і купівля EUR зараз в історично вигідній зоні.",
+    });
   } else if (latest.spread?.favorable) {
-    notes.push("Ланцюжок USD→EUR зараз у межах твого порогу вигідності.");
+    notes.push({
+      tone: "both",
+      text: "Ланцюжок USD→EUR зараз у межах твого порогу вигідності.",
+    });
   }
 
   return notes;

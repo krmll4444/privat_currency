@@ -130,7 +130,7 @@ export function createPane(
     });
   }
 
-  return { chart, main, delta, favor, style, isLine };
+  return { chart, main, delta, favor, style, isLine, el };
 }
 
 export function setPane(pane, candles, markers, favorData) {
@@ -140,6 +140,27 @@ export function setPane(pane, candles, markers, favorData) {
   pane.favor?.setData(favorData || []);
   pane.main.setMarkers(markers);
   pane.chart.timeScale().fitContent();
+}
+
+export function bindFavorHint(pane, hints, tip) {
+  if (!pane || !tip) return;
+  pane.chart.subscribeCrosshairMove((param) => {
+    const time = param?.time;
+    const point = param?.point;
+    const hint = time != null ? hints.get(time) : null;
+    if (!hint || !point || point.x < 0 || point.y < 0) {
+      tip.hidden = true;
+      return;
+    }
+    tip.hidden = false;
+    tip.querySelector(".chart-tip-title").textContent = hint.title;
+    tip.querySelector(".chart-tip-text").textContent = hint.text;
+    const box = pane.el.getBoundingClientRect();
+    const left = Math.min(box.left + point.x + 12, window.innerWidth - 288);
+    const top = Math.max(8, box.top + point.y - 12);
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  });
 }
 
 export function syncCharts(panes) {

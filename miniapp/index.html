@@ -38,11 +38,11 @@
       </section>
 
       <section class="rates">
-        <div>
+        <div id="rateUsd">
           <span>ФОП USD buy · більше = вигідніший продаж</span>
           <b id="bizUsd">—</b>
         </div>
-        <div>
+        <div id="rateEur">
           <span>P24 EUR sale · менше = вигідніша купівля</span>
           <b id="p24Eur">—</b>
         </div>
@@ -51,41 +51,44 @@
       <button type="button" class="btn-modal" id="openCalc">Калькулятор втрат</button>
 
       <div class="chart-bar">
-        <div class="chart-bar-main">
-          <nav class="periods" id="ranges">
-            <button type="button" data-range="24h">24 год</button>
-            <button type="button" data-range="7d">7 днів</button>
-            <button type="button" data-range="30d">30 днів</button>
-            <button type="button" data-range="90d" class="on">3 міс</button>
-            <button type="button" data-range="all">Усе</button>
-          </nav>
-          <nav class="periods" id="intervals">
-            <button type="button" data-interval="900">15 хв</button>
-            <button type="button" data-interval="3600">1 год</button>
-            <button type="button" data-interval="14400">4 год</button>
-            <button type="button" data-interval="86400" class="on">1 день</button>
-          </nav>
-        </div>
+        <p class="chart-summary" id="chartSummary">3 міс · 1 день</p>
         <div class="settings-wrap">
-          <button type="button" class="icon-btn" id="chartSettingsBtn" aria-label="Налаштування графіків" aria-haspopup="true" aria-expanded="false" aria-controls="chartSettingsMenu">
+          <button type="button" class="icon-btn" id="chartSettingsBtn" aria-label="Налаштування" aria-haspopup="true" aria-expanded="false" aria-controls="chartSettingsMenu">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
               <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.8 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.92 14.16a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.64.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.8c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.24.1.51 0 .64-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/>
             </svg>
           </button>
           <div class="settings-menu" id="chartSettingsMenu" hidden>
+            <p class="settings-title">Тема</p>
+            <div class="settings-pills" id="themePills">
+              <button type="button" data-theme="auto">Авто</button>
+              <button type="button" data-theme="light">Світла</button>
+              <button type="button" data-theme="dark">Темна</button>
+            </div>
+            <p class="settings-title">Період</p>
+            <div class="settings-pills" id="rangePills">
+              <button type="button" data-range="24h">24 год</button>
+              <button type="button" data-range="7d">7 днів</button>
+              <button type="button" data-range="30d">30 днів</button>
+              <button type="button" data-range="90d">3 міс</button>
+              <button type="button" data-range="all">Усе</button>
+            </div>
+            <p class="settings-title">Крок часу</p>
+            <div class="settings-pills" id="intervalPills">
+              <button type="button" data-interval="900">15 хв</button>
+              <button type="button" data-interval="3600">1 год</button>
+              <button type="button" data-interval="14400">4 год</button>
+              <button type="button" data-interval="86400">1 день</button>
+            </div>
             <p class="settings-title">Вигляд графіків</p>
-            <label class="settings-opt">
-              <input type="radio" name="chartStyle" value="candles" />
-              Свічки
-            </label>
-            <label class="settings-opt">
-              <input type="radio" name="chartStyle" value="line" />
-              Лінія
-            </label>
+            <div class="settings-pills" id="stylePills">
+              <button type="button" data-style="candles">Свічки</button>
+              <button type="button" data-style="line">Лінія</button>
+            </div>
           </div>
         </div>
       </div>
-      <p class="hint chart-hint">Зум колесом, зсув пальцем або мишею. Підсвітка секторів: зелена — заробіток, жовта — близько 0, блідо-зелена — мінімальна втрата (поріг або найкращі 20% періоду).</p>
+      <p class="hint chart-hint">Зум колесом. Наведи на зелений сектор — підказка, в чому вигода і яка втрата.</p>
       <div class="favor-legend" aria-hidden="true">
         <span class="leg profit">заробіток</span>
         <span class="leg zero">≈ 0</span>
@@ -138,10 +141,14 @@
         </div>
         <section class="analysis" id="analysis" aria-live="polite">
           <h3>Аналіз історії</h3>
-          <p class="hint">Продаж USD вигідний на максимумах купівлі ФОП. Купівля EUR — на мінімумах продажу Приват24.</p>
+      <p class="hint">Продаж USD вигідний на максимумах купівлі ФОП. Купівля EUR — на мінімумах продажу Приват24. Зелені абзаци — зараз вигідно діяти.</p>
           <ul id="analysisList"></ul>
         </section>
       </div>
+    </div>
+    <div class="chart-tip" id="chartTip" hidden>
+      <p class="chart-tip-title"></p>
+      <p class="chart-tip-text"></p>
     </div>
     <script type="module" src="./app.js"></script>
   </body>
