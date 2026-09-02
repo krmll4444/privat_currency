@@ -3,6 +3,7 @@ import {
   cutoffMs,
   eurMarkers,
   edgeMarkers,
+  favorHistogram,
   fmt,
   fmtPct,
   planEurPurchase,
@@ -55,6 +56,7 @@ let latest = null;
 let history = [];
 let range = "90d";
 let intervalSec = 86400;
+let chartStyle = localStorage.getItem("privat-chart-style") === "line" ? "line" : "candles";
 let panes = [];
 
 function renderLatest() {
@@ -130,17 +132,41 @@ function renderCharts() {
   const usd = toCandles(points(rows, (r) => r.business?.USD?.buy), intervalSec);
   const eur = toCandles(points(rows, (r) => r.p24?.EUR?.sale), intervalSec);
   const edge = toCandles(points(rows, (r) => r.spread?.edgePct), intervalSec);
+  const favor = favorHistogram(edge, latest?.thresholdPct ?? -1);
 
   if (panes.length) destroyPanes(panes);
+  const style = chartStyle;
   panes = [
-    createPane(document.getElementById("chartUsd"), { precision: 4 }),
-    createPane(document.getElementById("chartEur"), { invertColors: true, precision: 4 }),
-    createPane(document.getElementById("chartEdge"), { precision: 2 }),
+    createPane(document.getElementById("chartUsd"), { precision: 4, style }),
+    createPane(document.getElementById("chartEur"), {
+      invertColors: true,
+      precision: 4,
+      style,
+    }),
+    createPane(document.getElementById("chartEdge"), {
+      precision: 2,
+      style,
+      baseline: true,
+    }),
   ];
-  setPane(panes[0], usd, usdMarkers(usd));
-  setPane(panes[1], eur, eurMarkers(eur));
-  setPane(panes[2], edge, edgeMarkers(edge));
+  setPane(panes[0], usd, usdMarkers(usd), favor);
+  setPane(panes[1], eur, eurMarkers(eur), favor);
+  setPane(panes[2], edge, edgeMarkers(edge), favor);
   syncCharts(panes);
+}
+
+function syncStyleRadios() {
+  for (const input of document.querySelectorAll('input[name="chartStyle"]')) {
+    input.checked = input.value === chartStyle;
+  }
+}
+
+function setSettingsOpen(open) {
+  const menu = document.getElementById("chartSettingsMenu");
+  const btn = document.getElementById("chartSettingsBtn");
+  if (!menu || !btn) return;
+  menu.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 function bindToggles(rootId, attr, apply) {
@@ -177,8 +203,32 @@ function bindUi() {
     if (event.target.id === "calcModal") setModalOpen(false);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") setModalOpen(false);
+    if (event.key !== "Escape") return;
+    const menu = document.getElementById("chartSettingsMenu");
+    if (menu && !menu.hidden) {
+      setSettingsOpen(false);
+      return;
+    }
+    setModalOpen(false);
   });
+  document.getElementById("chartSettingsBtn")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const menu = document.getElementById("chartSettingsMenu");
+    setSettingsOpen(Boolean(menu?.hidden));
+  });
+  document.getElementById("chartSettingsMenu")?.addEventListener("change", (event) => {
+    const input = event.target;
+    if (input.name !== "chartStyle") return;
+    chartStyle = input.value === "line" ? "line" : "candles";
+    localStorage.setItem("privat-chart-style", chartStyle);
+    setSettingsOpen(false);
+    renderCharts();
+  });
+  document.addEventListener("click", (event) => {
+    const wrap = event.target.closest?.(".settings-wrap");
+    if (!wrap) setSettingsOpen(false);
+  });
+  syncStyleRadios();
   bindToggles("ranges", "data-range", (btn) => {
     range = btn.dataset.range;
     if (range === "90d" || range === "all") {

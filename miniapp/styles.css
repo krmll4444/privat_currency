@@ -130,6 +130,128 @@ h2 {
   padding: 16px;
 }
 
+.charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.charts .chart-panel {
+  margin-top: 0;
+}
+
+.chart-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.chart-bar-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-bar .periods {
+  margin-top: 0;
+}
+
+.chart-bar .periods + .periods {
+  margin-top: 8px;
+}
+
+.icon-btn {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.icon-btn[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.settings-wrap {
+  position: relative;
+  flex: none;
+}
+
+.settings-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: 220px;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.settings-menu[hidden] {
+  display: none;
+}
+
+.settings-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.settings-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.favor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leg::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.leg.profit::before {
+  background: rgba(34, 197, 94, 0.7);
+}
+
+.leg.zero::before {
+  background: rgba(250, 204, 21, 0.8);
+}
+
+.leg.low::before {
+  background: rgba(74, 222, 128, 0.45);
+}
+
 .btn-modal {
   display: block;
   width: 100%;
@@ -345,6 +467,31 @@ h2 {
   }
 }
 
+@media (min-width: 1100px) {
+  .wrap {
+    max-width: 1440px;
+  }
+
+  .charts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+    align-items: stretch;
+  }
+
+  .charts .chart-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .charts .tv-chart {
+    flex: 1;
+    height: min(46vh, 440px);
+    min-height: 320px;
+  }
+}
+
 @media (max-width: 640px) {
   .cards,
   .calc-out,
@@ -354,5 +501,9 @@ h2 {
 
   .tv-chart {
     height: 240px;
+  }
+
+  .chart-bar {
+    align-items: stretch;
   }
 }

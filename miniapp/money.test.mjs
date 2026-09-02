@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -37,4 +37,18 @@ test("cutoff 90d", () => {
   const from = cutoffMs("90d");
   const span = Date.now() - from;
   assert.ok(span > 89 * 24 * 3600 * 1000 && span < 91 * 24 * 3600 * 1000);
+});
+
+test("сектори вигоди: плюс / нуль / мін. втрата", () => {
+  assert.equal(sectorKind(0.4, -1), "profit");
+  assert.equal(sectorKind(0, -1), "zero");
+  assert.equal(sectorKind(-0.4, -1), "low-loss");
+  assert.equal(sectorKind(-1.4, -1), null);
+  const bars = favorHistogram(
+    [{ time: 1, close: 0.2 }, { time: 2, close: -0.3 }, { time: 3, close: -2 }],
+    -1,
+  );
+  assert.equal(bars[0].value, 1);
+  assert.equal(bars[1].value, 1);
+  assert.equal(bars[2].value, 0);
 });

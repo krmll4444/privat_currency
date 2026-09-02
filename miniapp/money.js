@@ -104,6 +104,48 @@ export function deltaHistogram(candles) {
   });
 }
 
+export function toLine(candles) {
+  return candles.map((c) => ({ time: c.time, value: c.close }));
+}
+
+/** profit > 0, zero ≈ 0, low-loss у межах порогу (ще мінус, але «вигідно»). */
+export function sectorKind(edgePct, thresholdPct = -1, zeroEps = 0.05) {
+  if (edgePct == null || Number.isNaN(edgePct)) return null;
+  if (edgePct > zeroEps) return "profit";
+  if (edgePct >= -zeroEps) return "zero";
+  if (edgePct >= thresholdPct) return "low-loss";
+  return null;
+}
+
+export function favorColor(kind) {
+  if (kind === "profit") return "rgba(34, 197, 94, 0.32)";
+  if (kind === "zero") return "rgba(250, 204, 21, 0.24)";
+  if (kind === "low-loss") return "rgba(74, 222, 128, 0.14)";
+  return "rgba(0, 0, 0, 0)";
+}
+
+export function relativeBestCutoff(values, fraction = 0.2) {
+  const nums = values
+    .filter((v) => v != null && !Number.isNaN(v))
+    .sort((a, b) => b - a);
+  if (!nums.length) return null;
+  const i = Math.max(0, Math.ceil(nums.length * fraction) - 1);
+  return nums[i];
+}
+
+export function favorHistogram(edgeCandles, thresholdPct = -1) {
+  const cutoff = relativeBestCutoff(edgeCandles.map((c) => c.close));
+  return edgeCandles.map((c) => {
+    let kind = sectorKind(c.close, thresholdPct);
+    if (!kind && cutoff != null && c.close >= cutoff) kind = "low-loss";
+    return {
+      time: c.time,
+      value: kind ? 1 : 0,
+      color: favorColor(kind),
+    };
+  });
+}
+
 export function usdMarkers(candles) {
   const markers = [];
   for (const i of extrema(candles, { peaks: true })) {

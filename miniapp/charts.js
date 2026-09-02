@@ -1,4 +1,4 @@
-import { deltaHistogram } from "./money.js";
+import { deltaHistogram, toLine } from "./money.js";
 
 const UP = "#22c55e";
 const DOWN = "#ef4444";
@@ -42,44 +42,96 @@ function chartOptions() {
   };
 }
 
-export function createPane(el, { invertColors = false, precision = 4 } = {}) {
+function addFavorSeries(chart) {
+  const favor = chart.addHistogramSeries({
+    priceScaleId: "favor",
+    lastValueVisible: false,
+    priceLineVisible: false,
+    base: 0,
+  });
+  chart.priceScale("favor").applyOptions({
+    visible: false,
+    scaleMargins: { top: 0, bottom: 0 },
+  });
+  return favor;
+}
+
+export function createPane(
+  el,
+  { invertColors = false, precision = 4, style = "candles", baseline = false } = {},
+) {
   if (!el || !window.LightweightCharts) return null;
   el.replaceChildren();
   const LWC = window.LightweightCharts;
   const chart = LWC.createChart(el, chartOptions());
+  const favor = addFavorSeries(chart);
   const up = invertColors ? DOWN : UP;
   const down = invertColors ? UP : DOWN;
+  const isLine = style === "line";
+  const lineType = LWC.LineType?.Simple ?? 0;
 
-  const candles = chart.addCandlestickSeries({
-    upColor: up,
-    downColor: down,
-    borderUpColor: up,
-    borderDownColor: down,
-    wickUpColor: up,
-    wickDownColor: down,
-    priceFormat: { type: "price", precision, minMove: 10 ** -precision },
-  });
-  candles.priceScale().applyOptions({
-    scaleMargins: { top: 0.08, bottom: 0.28 },
+  let main;
+  if (isLine && baseline) {
+    main = chart.addBaselineSeries({
+      baseValue: { type: "price", price: 0 },
+      topLineColor: UP,
+      topFillColor1: "rgba(34, 197, 94, 0.28)",
+      topFillColor2: "rgba(34, 197, 94, 0.04)",
+      bottomLineColor: DOWN,
+      bottomFillColor1: "rgba(239, 68, 68, 0.22)",
+      bottomFillColor2: "rgba(239, 68, 68, 0.04)",
+      lineWidth: 2,
+      lineType,
+      lastValueVisible: true,
+      priceLineVisible: false,
+      priceFormat: { type: "price", precision, minMove: 10 ** -precision },
+    });
+  } else if (isLine) {
+    main = chart.addLineSeries({
+      color: invertColors ? "#38bdf8" : UP,
+      lineWidth: 2,
+      lineType,
+      lastValueVisible: true,
+      priceLineVisible: false,
+      priceFormat: { type: "price", precision, minMove: 10 ** -precision },
+    });
+  } else {
+    main = chart.addCandlestickSeries({
+      upColor: up,
+      downColor: down,
+      borderUpColor: up,
+      borderDownColor: down,
+      wickUpColor: up,
+      wickDownColor: down,
+      priceFormat: { type: "price", precision, minMove: 10 ** -precision },
+    });
+  }
+
+  main.priceScale().applyOptions({
+    scaleMargins: { top: 0.08, bottom: isLine ? 0.08 : 0.28 },
   });
 
-  const delta = chart.addHistogramSeries({
-    priceScaleId: "delta",
-    priceFormat: { type: "price", precision, minMove: 10 ** -precision },
-  });
-  chart.priceScale("delta").applyOptions({
-    scaleMargins: { top: 0.82, bottom: 0 },
-    borderVisible: false,
-  });
+  let delta = null;
+  if (!isLine) {
+    delta = chart.addHistogramSeries({
+      priceScaleId: "delta",
+      priceFormat: { type: "price", precision, minMove: 10 ** -precision },
+    });
+    chart.priceScale("delta").applyOptions({
+      scaleMargins: { top: 0.82, bottom: 0 },
+      borderVisible: false,
+    });
+  }
 
-  return { chart, candles, delta };
+  return { chart, main, delta, favor, style, isLine };
 }
 
-export function setPane(pane, candles, markers) {
+export function setPane(pane, candles, markers, favorData) {
   if (!pane) return;
-  pane.candles.setData(candles);
-  pane.delta.setData(deltaHistogram(candles));
-  pane.candles.setMarkers(markers);
+  pane.main.setData(pane.isLine ? toLine(candles) : candles);
+  pane.delta?.setData(deltaHistogram(candles));
+  pane.favor?.setData(favorData || []);
+  pane.main.setMarkers(markers);
   pane.chart.timeScale().fitContent();
 }
 
