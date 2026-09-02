@@ -73,7 +73,8 @@ function renderLatest() {
 }
 
 function renderCalc() {
-  const eurAmount = Number(document.getElementById("eurInput").value);
+  const input = document.getElementById("eurInput");
+  const eurAmount = Number(input?.value);
   const plan = planEurPurchase({
     eurAmount,
     businessUsdBuy: latest?.business?.USD?.buy,
@@ -81,25 +82,30 @@ function renderCalc() {
     marketUsd: latest?.nbu?.USD,
     marketEur: latest?.nbu?.EUR,
   });
+  const usd = document.getElementById("calcUsd");
+  const uah = document.getElementById("calcUah");
+  const nbuUsd = document.getElementById("calcUsdNbu");
+  const loss = document.getElementById("calcLoss");
+  if (!usd || !uah || !nbuUsd || !loss) return;
   if (!plan) {
-    document.getElementById("calcUsd").textContent = "—";
-    document.getElementById("calcUah").textContent = "—";
-    document.getElementById("calcUsdNbu").textContent = "—";
-    document.getElementById("calcLoss").textContent = "—";
+    usd.textContent = "—";
+    uah.textContent = "—";
+    nbuUsd.textContent = "—";
+    loss.textContent = "—";
     return;
   }
-  document.getElementById("calcUsd").textContent = `${fmt(plan.usdFop, 2)} $`;
-  document.getElementById("calcUah").textContent = `${fmt(plan.uahNeeded, 0)} грн`;
-  document.getElementById("calcUsdNbu").textContent = `${fmt(plan.usdNbu, 2)} $`;
-  document.getElementById("calcLoss").textContent =
-    `${fmt(plan.extraUsd, 2)} $  ·  ${fmt(plan.extraUah, 0)} грн  ·  ${fmtPct(plan.lossPct)}`;
+  usd.textContent = `${fmt(plan.usdFop, 2)} $`;
+  uah.textContent = `${fmt(plan.uahNeeded, 0)} грн`;
+  nbuUsd.textContent = `${fmt(plan.usdNbu, 2)} $`;
+  loss.textContent = `${fmt(plan.extraUsd, 2)} $  ·  ${fmt(plan.extraUah, 0)} грн  ·  ${fmtPct(plan.lossPct)}`;
 }
 
 function renderAnalysis() {
+  const list = document.getElementById("analysisList");
+  if (!list || !latest) return;
   const from = cutoffMs(range);
   const rows = history.filter((row) => row.ts && Date.parse(row.ts) >= from);
   const notes = analyze(rows.length ? rows : history, latest);
-  const list = document.getElementById("analysisList");
   list.replaceChildren(
     ...notes.map((text) => {
       const li = document.createElement("li");
@@ -138,10 +144,11 @@ function renderCharts() {
 }
 
 function bindToggles(rootId, attr, apply) {
-  document.getElementById(rootId).addEventListener("click", (event) => {
+  const root = document.getElementById(rootId);
+  root?.addEventListener("click", (event) => {
     const btn = event.target.closest(`button[${attr}]`);
     if (!btn) return;
-    for (const el of event.currentTarget.querySelectorAll("button")) {
+    for (const el of root.querySelectorAll("button")) {
       el.classList.toggle("on", el === btn);
     }
     apply(btn);
@@ -150,14 +157,37 @@ function bindToggles(rootId, attr, apply) {
   });
 }
 
-document.getElementById("eurInput").addEventListener("input", renderCalc);
+function setModalOpen(open) {
+  const modal = document.getElementById("calcModal");
+  if (!modal) return;
+  modal.hidden = !open;
+  document.body.style.overflow = open ? "hidden" : "";
+  if (open) {
+    renderCalc();
+    renderAnalysis();
+    document.getElementById("eurInput")?.focus();
+  }
+}
 
-bindToggles("ranges", "data-range", (btn) => {
-  range = btn.dataset.range;
-});
-bindToggles("intervals", "data-interval", (btn) => {
-  intervalSec = Number(btn.dataset.interval);
-});
+function bindUi() {
+  document.getElementById("eurInput")?.addEventListener("input", renderCalc);
+  document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
+  document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
+  document.getElementById("calcModal")?.addEventListener("click", (event) => {
+    if (event.target.id === "calcModal") setModalOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setModalOpen(false);
+  });
+  bindToggles("ranges", "data-range", (btn) => {
+    range = btn.dataset.range;
+  });
+  bindToggles("intervals", "data-interval", (btn) => {
+    intervalSec = Number(btn.dataset.interval);
+  });
+}
+
+bindUi();
 
 async function boot() {
   try {
@@ -175,5 +205,5 @@ async function boot() {
 
 boot();
 window.addEventListener("resize", () => {
-  for (const pane of panes) pane.chart.applyOptions({ autoSize: true });
+  for (const pane of panes) pane?.chart.applyOptions({ autoSize: true });
 });

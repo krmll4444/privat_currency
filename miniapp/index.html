@@ -44,29 +44,7 @@
         </div>
       </section>
 
-      <section class="calc" aria-labelledby="calc-title">
-        <h2 id="calc-title">Калькулятор втрат</h2>
-        <p class="hint">Скільки EUR треба купити в Приват24 — рахуємо, скільки USD продати на ФОП і скільки втрачаєш vs НБУ.</p>
-        <label class="calc-field">
-          Потрібно EUR
-          <input id="eurInput" type="number" min="0" step="50" value="1000" inputmode="decimal" />
-        </label>
-        <div class="calc-out">
-          <div><span>Продати ФОП USD</span><b id="calcUsd">—</b></div>
-          <div><span>Гривень на купівлю EUR</span><b id="calcUah">—</b></div>
-          <div><span>За крос-курсом НБУ вистачило б USD</span><b id="calcUsdNbu">—</b></div>
-          <div class="calc-loss">
-            <span>Втрата vs НБУ</span>
-            <b id="calcLoss">—</b>
-          </div>
-        </div>
-      </section>
-
-      <section class="analysis" id="analysis" aria-live="polite">
-        <h2>Аналіз історії</h2>
-        <p class="hint">Продаж USD вигідний на максимумах купівлі ФОП. Купівля EUR — на мінімумах продажу Приват24.</p>
-        <ul id="analysisList"></ul>
-      </section>
+      <button type="button" class="btn-modal" id="openCalc">Калькулятор втрат</button>
 
       <nav class="periods" id="ranges">
         <button type="button" data-range="24h">24 год</button>
@@ -100,6 +78,37 @@
 
       <p class="meta" id="meta">Завантаження…</p>
     </main>
+
+    <div class="modal-backdrop" id="calcModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="calc-title">
+        <header class="modal-head">
+          <h2 id="calc-title">Калькулятор втрат</h2>
+          <button type="button" class="modal-close" id="closeCalc" aria-label="Закрити">×</button>
+        </header>
+        <p class="hint">Скільки EUR треба в Приват24 — скільки USD продати на ФОП і яка втрата vs НБУ.</p>
+        <label class="calc-field" for="eurInput">
+          Потрібно EUR
+          <span class="calc-input-wrap">
+            <input id="eurInput" type="number" min="0" step="50" value="1000" inputmode="decimal" />
+            <span class="calc-suffix">EUR</span>
+          </span>
+        </label>
+        <div class="calc-out">
+          <div><span>Продати ФОП USD</span><b id="calcUsd">—</b></div>
+          <div><span>Гривень на купівлю EUR</span><b id="calcUah">—</b></div>
+          <div><span>За крос-курсом НБУ вистачило б USD</span><b id="calcUsdNbu">—</b></div>
+          <div class="calc-loss">
+            <span>Втрата vs НБУ</span>
+            <b id="calcLoss">—</b>
+          </div>
+        </div>
+        <section class="analysis" id="analysis" aria-live="polite">
+          <h3>Аналіз історії</h3>
+          <p class="hint">Продаж USD вигідний на максимумах купівлі ФОП. Купівля EUR — на мінімумах продажу Приват24.</p>
+          <ul id="analysisList"></ul>
+        </section>
+      </div>
+    </div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

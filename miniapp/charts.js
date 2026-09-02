@@ -43,6 +43,7 @@ function chartOptions() {
 }
 
 export function createPane(el, { invertColors = false, precision = 4 } = {}) {
+  if (!el || !window.LightweightCharts) return null;
   el.replaceChildren();
   const LWC = window.LightweightCharts;
   const chart = LWC.createChart(el, chartOptions());
@@ -75,6 +76,7 @@ export function createPane(el, { invertColors = false, precision = 4 } = {}) {
 }
 
 export function setPane(pane, candles, markers) {
+  if (!pane) return;
   pane.candles.setData(candles);
   pane.delta.setData(deltaHistogram(candles));
   pane.candles.setMarkers(markers);
@@ -82,12 +84,13 @@ export function setPane(pane, candles, markers) {
 }
 
 export function syncCharts(panes) {
+  const live = panes.filter(Boolean);
   let lock = false;
-  for (const pane of panes) {
+  for (const pane of live) {
     pane.chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
       if (lock || !range) return;
       lock = true;
-      for (const other of panes) {
+      for (const other of live) {
         if (other === pane) continue;
         other.chart.timeScale().setVisibleLogicalRange(range);
       }
@@ -97,5 +100,5 @@ export function syncCharts(panes) {
 }
 
 export function destroyPanes(panes) {
-  for (const pane of panes) pane.chart.remove();
+  for (const pane of panes) pane?.chart.remove();
 }
