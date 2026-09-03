@@ -12,8 +12,9 @@ import {
   toCandles,
   todayAdvice,
   usdMarkers,
-} from "./money.js?v=20260902d";
-import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260902d";
+} from "./money.js?v=20260903a";
+import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260903a";
+import { factorNotes, predictKind } from "./predict.js?v=20260903a";
 
 const RANGE_LABEL = {
   "24h": "24 год",
@@ -290,11 +291,78 @@ function setModalOpen(open) {
   const modal = document.getElementById("calcModal");
   if (!modal) return;
   modal.hidden = !open;
-  document.body.style.overflow = open ? "hidden" : "";
   if (open) {
     renderCalc();
     renderAnalysis();
     document.getElementById("eurInput")?.focus();
+  }
+  syncBodyScroll();
+}
+
+function setPredictOpen(open) {
+  const modal = document.getElementById("predictModal");
+  if (!modal) return;
+  modal.hidden = !open;
+  syncBodyScroll();
+}
+
+function syncBodyScroll() {
+  const calc = document.getElementById("calcModal");
+  const pred = document.getElementById("predictModal");
+  document.body.style.overflow =
+    (calc && !calc.hidden) || (pred && !pred.hidden) ? "hidden" : "";
+}
+
+function formatPredictValue(kind, n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  if (kind === "edge") return fmtPct(n);
+  return fmt(n, 4);
+}
+
+function renderPredict(kind) {
+  const rows = history.length ? history : visibleRows();
+  const model = predictKind(kind, rows, { stepSec: intervalSec });
+  const title = document.getElementById("predict-title");
+  const hint = document.getElementById("predictHint");
+  const dir = document.getElementById("predictDir");
+  const now = document.getElementById("predictNow");
+  const p1 = document.getElementById("predict1");
+  const p3 = document.getElementById("predict3");
+  const p7 = document.getElementById("predict7");
+  const conf = document.getElementById("predictConf");
+  const band = document.getElementById("predictBand");
+  const list = document.getElementById("predictFactors");
+  if (title) title.textContent = model.meta.title;
+  if (hint) hint.textContent = model.meta.hint;
+  if (!model.ok) {
+    if (dir) dir.textContent = "Недостатньо історії для предикту.";
+    if (now) now.textContent = "—";
+    if (p1) p1.textContent = "—";
+    if (p3) p3.textContent = "—";
+    if (p7) p7.textContent = "—";
+    if (conf) conf.textContent = "—";
+    if (band) band.textContent = "Потрібно щонайменше 8 точок.";
+    if (list) list.replaceChildren();
+    return;
+  }
+  const h3 = model.horizons[3];
+  if (dir) dir.textContent = model.direction;
+  if (now) now.textContent = formatPredictValue(kind, model.last);
+  if (p1) p1.textContent = formatPredictValue(kind, model.horizons[1].value);
+  if (p3) p3.textContent = formatPredictValue(kind, model.horizons[3].value);
+  if (p7) p7.textContent = formatPredictValue(kind, model.horizons[7].value);
+  if (conf) conf.textContent = `${Math.round(model.confidence * 100)}%`;
+  if (band) {
+    band.textContent = `Коридор 3 дні (≈80%): ${formatPredictValue(kind, h3.low)} … ${formatPredictValue(kind, h3.high)} · ${model.n} точок усієї історії.`;
+  }
+  if (list) {
+    list.replaceChildren(
+      ...factorNotes(model).map((text) => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        return li;
+      }),
+    );
   }
 }
 
@@ -343,11 +411,26 @@ function bindUi() {
   document.getElementById("calcModal")?.addEventListener("click", (event) => {
     if (event.target.id === "calcModal") setModalOpen(false);
   });
+  document.getElementById("closePredict")?.addEventListener("click", () => setPredictOpen(false));
+  document.getElementById("predictModal")?.addEventListener("click", (event) => {
+    if (event.target.id === "predictModal") setPredictOpen(false);
+  });
+  document.querySelector(".charts")?.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-predict]");
+    if (!btn) return;
+    renderPredict(btn.dataset.predict);
+    setPredictOpen(true);
+  });
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     const menu = document.getElementById("chartSettingsMenu");
     if (menu && !menu.hidden) {
       setSettingsOpen(false);
+      return;
+    }
+    const pred = document.getElementById("predictModal");
+    if (pred && !pred.hidden) {
+      setPredictOpen(false);
       return;
     }
     setModalOpen(false);

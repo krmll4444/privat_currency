@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-    <link rel="stylesheet" href="./styles.css?v=20260902d" />
+    <link rel="stylesheet" href="./styles.css?v=20260903a" />
   </head>
   <body>
     <div class="pb-strip" aria-hidden="true"></div>
@@ -102,18 +102,45 @@
 
       <div class="charts">
         <section class="chart-panel">
-          <h2>USD ФОП · продаж</h2>
-          <p class="hint">Купівля банком. Вище — більше гривень за долар.</p>
+          <header class="chart-head">
+            <div>
+              <h2>USD ФОП · продаж</h2>
+              <p class="hint">Купівля банком. Вище — більше гривень за долар.</p>
+            </div>
+            <button type="button" class="icon-btn predict-btn" data-predict="usd" aria-label="Predict USD">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path fill="currentColor" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5 1.5L9 4 6.5 10.5 0 13l6.5 2.5L9 22l2.5-6.5L18 13l-6.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+              </svg>
+            </button>
+          </header>
           <div id="chartUsd" class="tv-chart"></div>
         </section>
         <section class="chart-panel">
-          <h2>EUR Приват24 · купівля</h2>
-          <p class="hint">Продаж банком. Нижче — дешевше купити євро.</p>
+          <header class="chart-head">
+            <div>
+              <h2>EUR Приват24 · купівля</h2>
+              <p class="hint">Продаж банком. Нижче — дешевше купити євро.</p>
+            </div>
+            <button type="button" class="icon-btn predict-btn" data-predict="eur" aria-label="Predict EUR">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path fill="currentColor" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5 1.5L9 4 6.5 10.5 0 13l6.5 2.5L9 22l2.5-6.5L18 13l-6.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+              </svg>
+            </button>
+          </header>
           <div id="chartEur" class="tv-chart"></div>
         </section>
         <section class="chart-panel">
-          <h2>Відхилення vs НБУ</h2>
-          <p class="hint">Ближче до нуля або плюс — конвертація дешевша.</p>
+          <header class="chart-head">
+            <div>
+              <h2>Відхилення vs НБУ</h2>
+              <p class="hint">Ближче до нуля або плюс — конвертація дешевша.</p>
+            </div>
+            <button type="button" class="icon-btn predict-btn" data-predict="edge" aria-label="Predict відхилення">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path fill="currentColor" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5 1.5L9 4 6.5 10.5 0 13l6.5 2.5L9 22l2.5-6.5L18 13l-6.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+              </svg>
+            </button>
+          </header>
           <div id="chartEdge" class="tv-chart"></div>
         </section>
       </div>
@@ -157,10 +184,38 @@
         </section>
       </div>
     </div>
+    <div class="modal-backdrop" id="predictModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="predict-title">
+        <header class="modal-head">
+          <h2 id="predict-title">Predict</h2>
+          <button type="button" class="modal-close" id="closePredict" aria-label="Закрити">×</button>
+        </header>
+        <p class="predict-warn">
+          Експериментальна річ. Вона <strong>не рекомендує</strong>, <strong>не прогнозує</strong>
+          і <strong>не зобов’язує</strong> до жодних дій. Це лише статистичний начерк по історії курсів
+          у цьому репо. Рішення про конвертацію — тільки твоє.
+        </p>
+        <p class="hint" id="predictHint"></p>
+        <p class="predict-dir" id="predictDir">—</p>
+        <div class="predict-now">
+          <span>Зараз</span>
+          <b id="predictNow">—</b>
+        </div>
+        <div class="calc-out predict-horizons">
+          <div><span>1 день</span><b id="predict1">—</b></div>
+          <div><span>3 дні</span><b id="predict3">—</b></div>
+          <div><span>7 днів</span><b id="predict7">—</b></div>
+          <div><span>Впевненість моделі</span><b id="predictConf">—</b></div>
+        </div>
+        <p class="hint" id="predictBand"></p>
+        <h3 class="predict-factors-title">Що враховано</h3>
+        <ul id="predictFactors"></ul>
+      </div>
+    </div>
     <div class="chart-tip" id="chartTip" hidden>
       <p class="chart-tip-title"></p>
       <p class="chart-tip-text"></p>
     </div>
-    <script type="module" src="./app.js?v=20260902d"></script>
+    <script type="module" src="./app.js?v=20260903a"></script>
   </body>
 </html>

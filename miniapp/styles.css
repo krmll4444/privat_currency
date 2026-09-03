@@ -222,6 +222,72 @@ h2 {
   margin-top: 0;
 }
 
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.chart-head h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.chart-head .hint {
+  margin: 0;
+}
+
+.predict-btn {
+  color: var(--green-dark);
+}
+
+.predict-warn {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 179, 0, 0.16);
+  border: 1px solid rgba(255, 179, 0, 0.45);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.predict-dir {
+  margin: 0 0 10px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--green-dark);
+}
+
+.predict-now {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.predict-now b {
+  color: var(--text);
+  font-size: 20px;
+}
+
+.predict-factors-title {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#predictFactors {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .chart-bar {
   display: flex;
   align-items: center;
