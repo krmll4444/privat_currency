@@ -326,6 +326,25 @@ function setSettingsOpen(open) {
   if (!menu || !btn) return;
   menu.hidden = !open;
   btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) setInfoOpen(false);
+}
+
+let infoPinned = false;
+
+function setInfoOpen(open, { pin } = {}) {
+  const pop = document.getElementById("chartInfoPop");
+  const btn = document.getElementById("chartInfoBtn");
+  if (!pop || !btn) return;
+  pop.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (!open) infoPinned = false;
+  else if (pin) infoPinned = true;
+  if (open) {
+    const menu = document.getElementById("chartSettingsMenu");
+    const gear = document.getElementById("chartSettingsBtn");
+    if (menu) menu.hidden = true;
+    gear?.setAttribute("aria-expanded", "false");
+  }
 }
 
 function setModalOpen(open) {
@@ -464,6 +483,11 @@ function bindUi() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    const info = document.getElementById("chartInfoPop");
+    if (info && !info.hidden) {
+      setInfoOpen(false);
+      return;
+    }
     const menu = document.getElementById("chartSettingsMenu");
     if (menu && !menu.hidden) {
       setSettingsOpen(false);
@@ -481,8 +505,27 @@ function bindUi() {
     const menu = document.getElementById("chartSettingsMenu");
     setSettingsOpen(Boolean(menu?.hidden));
   });
+  const infoWrap = document.getElementById("chartInfoWrap");
+  const infoBtn = document.getElementById("chartInfoBtn");
+  infoWrap?.addEventListener("pointerenter", () => {
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setInfoOpen(true);
+  });
+  infoWrap?.addEventListener("pointerleave", () => {
+    if (!infoPinned) setInfoOpen(false);
+  });
+  infoBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const pop = document.getElementById("chartInfoPop");
+    if (!pop) return;
+    if (!pop.hidden && infoPinned) {
+      setInfoOpen(false);
+      return;
+    }
+    setInfoOpen(true, { pin: true });
+  });
   document.addEventListener("click", (event) => {
     if (!event.target.closest?.(".settings-wrap")) setSettingsOpen(false);
+    if (!event.target.closest?.(".info-wrap")) setInfoOpen(false);
   });
   bindPills("themePills", (btn) => {
     themePref = btn.dataset.theme;
