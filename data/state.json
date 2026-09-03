@@ -1,4 +1,8 @@
 {
-  "lastNotifyAt": "2026-09-02T20:00:18.933Z",
-  "lastEdgePct": -1.266
+  "lastNotifyAt": "2026-09-03T06:14:01.772Z",
+  "lastEdgePct": -1.266,
+  "lastNotifyKind": "chain",
+  "lastNotifyKinds": [
+    "chain"
+  ]
 }
