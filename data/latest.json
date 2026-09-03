@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-03T21:22:30.222Z",
+  "ts": "2026-09-03T23:26:10.176Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -50,7 +50,7 @@
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 33.7
+    "edgeRank": 34.4
   },
   "profile": {
     "extraUah": 1433,
@@ -59,8 +59,8 @@
     "uahNeeded": 104712
   },
   "sides": {
-    "usdRank": 42.2,
-    "eurRank": 90,
+    "usdRank": 41.8,
+    "eurRank": 89,
     "sellUsd": false,
     "buyEur": false
   },
