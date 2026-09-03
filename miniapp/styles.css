@@ -23,6 +23,7 @@
   --tone-sell: rgba(78, 165, 36, 0.16);
   --tone-buy: rgba(0, 143, 254, 0.14);
   --tone-wait: rgba(30, 37, 39, 0.05);
+  --tone-bad: rgba(245, 61, 70, 0.12);
   font-family: Manrope, Helvetica, Arial, sans-serif;
 }
 
@@ -51,6 +52,7 @@ html[data-theme="dark"] {
   --tone-sell: rgba(78, 165, 36, 0.22);
   --tone-buy: rgba(0, 143, 254, 0.2);
   --tone-wait: rgba(255, 255, 255, 0.06);
+  --tone-bad: rgba(245, 61, 70, 0.2);
 }
 
 * {
@@ -77,10 +79,14 @@ body {
 }
 
 .top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 12px;
+}
+
+.top-actions {
+  display: contents;
 }
 
 .eyebrow {
@@ -117,7 +123,7 @@ h2 {
   font-size: 14px;
   white-space: normal;
   text-align: right;
-  max-width: min(16rem, 58%);
+  max-width: 16rem;
   line-height: 1.25;
 }
 
@@ -189,21 +195,111 @@ h2 {
 
 .insights {
   margin-top: 10px;
-  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 8px;
+}
+
+.insights[hidden] {
+  display: none;
+}
+
+.insight {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
-.insights p {
+.insight-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--tone-wait);
+  color: var(--muted);
+}
+
+.insight-copy {
+  min-width: 0;
+}
+
+.insight-kicker {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--text);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.insight-title {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.insight-hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.insight--go {
+  background: var(--tone-sell);
+  border-color: transparent;
+}
+
+.insight--go .insight-icon {
+  background: var(--green);
+  color: var(--on-accent);
+}
+
+.insight--go .insight-title {
+  color: var(--green-dark);
+}
+
+.insight--buy {
+  background: var(--tone-buy);
+  border-color: transparent;
+}
+
+.insight--buy .insight-icon {
+  background: var(--blue);
+  color: var(--on-accent);
+}
+
+.insight--buy .insight-title {
+  color: var(--blue);
+}
+
+.insight--wait .insight-icon,
+.insight--meh .insight-icon {
+  background: var(--tone-wait);
+  color: var(--muted);
+}
+
+.insight--bad {
+  background: var(--tone-bad);
+  border-color: transparent;
+}
+
+.insight--bad .insight-icon {
+  background: var(--red);
+  color: var(--on-accent);
+}
+
+.insight--bad .insight-title {
+  color: var(--red-text);
 }
 
 .chart-panel {
@@ -422,17 +518,27 @@ h2 {
 }
 
 .btn-modal {
-  display: block;
-  width: 100%;
-  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin: 0;
   border: 0;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 8px 12px;
   background: var(--green);
   color: var(--on-accent);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.btn-modal svg {
+  flex-shrink: 0;
 }
 
 .btn-modal:hover {
@@ -716,6 +822,11 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  .btn-modal {
+    justify-self: stretch;
+    width: 100%;
+  }
+
   .cards,
   .calc-out,
   .rates {

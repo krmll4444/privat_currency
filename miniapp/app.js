@@ -11,10 +11,11 @@ import {
   snapByInterval,
   toCandles,
   todayAdvice,
+  insightItems,
   usdMarkers,
-} from "./money.js?v=20260903a";
-import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260903a";
-import { factorNotes, predictKind } from "./predict.js?v=20260903a";
+} from "./money.js?v=20260903c";
+import { bindFavorHint, createPane, destroyPanes, setPane, syncCharts } from "./charts.js?v=20260903c";
+import { factorNotes, predictKind } from "./predict.js?v=20260903c";
 
 const RANGE_LABEL = {
   "24h": "24 год",
@@ -130,6 +131,67 @@ function visibleRows() {
   return history.filter((row) => row.ts && Date.parse(row.ts) >= from);
 }
 
+const INSIGHT_ICONS = {
+  now_go: "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z",
+  now_buy: "M12 4 10.59 5.41 16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z",
+  now_wait: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20Zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9Z",
+  now_meh: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
+  day_go: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
+  day_bad: "M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z",
+  day_meh: "M22 12l-4-4v3H3v2h15v3z",
+  cash_buy: "M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2Zm0 14H4v-6h16v6Zm0-10H4V6h16v2Z",
+  cash_bad: "M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2Zm0 14H4v-6h16v6Zm0-10H4V6h16v2Z",
+  cash_meh: "M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2Zm0 14H4v-6h16v6Zm0-10H4V6h16v2Z",
+  date_go: "M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V10h14v10Zm0-12H5V6h14v2Zm-7 5h5v5h-5v-5Z",
+  date_wait: "M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6Z",
+  date_bad: "M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V10h14v10ZM9.5 11.5 11 13l-1.5 1.5L11 16l-1.5 1.5L8 16l-1.5 1.5L5 16l1.5-1.5L5 13l1.5-1.5L8 13l1.5-1.5Zm9 0L17 13l1.5 1.5L17 16l1.5 1.5L20 16l-1.5-1.5L20 13l-1.5-1.5Z",
+  date_meh: "M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V10h14v10Zm0-12H5V6h14v2Z",
+};
+
+function insightIcon(id, tone) {
+  const d = INSIGHT_ICONS[`${id}_${tone}`] || INSIGHT_ICONS.now_meh;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "20");
+  svg.setAttribute("height", "20");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("fill", "currentColor");
+  path.setAttribute("d", d);
+  svg.appendChild(path);
+  return svg;
+}
+
+function renderInsights(advice) {
+  const root = document.getElementById("insights");
+  if (!root) return;
+  const items = insightItems(advice);
+  root.hidden = !items.length;
+  root.replaceChildren(
+    ...items.map((item) => {
+      const el = document.createElement("article");
+      el.className = `insight insight--${item.tone}`;
+      const icon = document.createElement("span");
+      icon.className = "insight-icon";
+      icon.appendChild(insightIcon(item.id, item.tone));
+      const copy = document.createElement("div");
+      copy.className = "insight-copy";
+      const kicker = document.createElement("p");
+      kicker.className = "insight-kicker";
+      kicker.textContent = item.kicker;
+      const title = document.createElement("p");
+      title.className = "insight-title";
+      title.textContent = item.title;
+      const hint = document.createElement("p");
+      hint.className = "insight-hint";
+      hint.textContent = item.hint;
+      copy.append(kicker, title, hint);
+      el.append(icon, copy);
+      return el;
+    }),
+  );
+}
+
 function renderLatest() {
   const spread = latest.spread || {};
   const rows = visibleRows();
@@ -150,28 +212,7 @@ function renderLatest() {
   document.getElementById("p24Eur").textContent = fmt(latest.p24?.EUR?.sale, 5);
   document.getElementById("rateUsd")?.classList.toggle("hot", advice.sellUsd);
   document.getElementById("rateEur")?.classList.toggle("hot", advice.buyEur);
-  const insights = document.getElementById("insights");
-  const dayLine = document.getElementById("dayLine");
-  const cashLine = document.getElementById("cashLine");
-  const horizonLine = document.getElementById("horizonLine");
-  if (dayLine) {
-    dayLine.hidden = advice.dayDelta == null;
-    if (advice.dayDelta != null) {
-      const sign = advice.dayDelta >= 0 ? "+" : "";
-      dayLine.textContent = `За день: ${sign}${advice.dayDelta.toFixed(2)} п.п.`;
-    }
-  }
-  if (cashLine) {
-    cashLine.hidden = !advice.cash?.verdict;
-    cashLine.textContent = advice.cash?.verdict || "";
-  }
-  if (horizonLine) {
-    horizonLine.hidden = !advice.waitText;
-    horizonLine.textContent = advice.waitText || "";
-  }
-  if (insights) {
-    insights.hidden = Boolean(dayLine?.hidden && cashLine?.hidden && horizonLine?.hidden);
-  }
+  renderInsights(advice);
   const ts = latest.ts ? new Date(latest.ts).toLocaleString("uk-UA") : "ще не було запуску";
   document.getElementById("meta").textContent =
     `${advice.action} · оновлено ${ts} · поріг ${fmtPct(latest.thresholdPct)}`;

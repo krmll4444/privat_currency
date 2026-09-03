@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile, sideSignals, cashCompare, waitHorizon, dayDeltaPct, daysUntil } from "./money.js";
+import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile, sideSignals, cashCompare, waitHorizon, dayDeltaPct, daysUntil, insightItems } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -199,4 +199,38 @@ test("dayDelta vs перший тік дня", () => {
 
 test("daysUntil рахує календарні дні", () => {
   assert.equal(daysUntil("2026-09-07", Date.parse("2026-09-02T12:00:00Z")), 5);
+});
+
+test("insights: не міняй / стоїть / все одно", () => {
+  const items = insightItems({
+    status: "wait",
+    sellUsd: false,
+    buyEur: false,
+    dayDelta: 0,
+    extraUah: 1318,
+    targetEur: 2000,
+    cash: { cardEurSale: 52.08, cashEurSale: 52.1, diff: -0.02, extraUah: -33, plays: true },
+  });
+  assert.equal(items.find((i) => i.id === "now")?.title, "Не міняй");
+  assert.equal(items.find((i) => i.id === "day")?.title, "Стоїть");
+  assert.equal(items.find((i) => i.id === "cash")?.title, "Все одно");
+});
+
+test("insights: продай $ і бери готівку", () => {
+  const items = insightItems({
+    status: "partial",
+    sellUsd: true,
+    buyEur: false,
+    cash: { cardEurSale: 52.08, cashEurSale: 51.95, diff: 0.13, extraUah: 260, plays: false },
+    targetEur: 2000,
+  });
+  assert.equal(items.find((i) => i.id === "now")?.title, "Продай $");
+  assert.equal(items.find((i) => i.id === "now")?.hint, "€ поки не купуй");
+  assert.equal(items.find((i) => i.id === "cash")?.title, "Бери готівку");
+});
+
+test("insights: почекай до дати", () => {
+  const items = insightItems({ status: "wait", daysLeft: 5, wait: true });
+  assert.equal(items.find((i) => i.id === "date")?.title, "Почекай");
+  assert.match(items.find((i) => i.id === "date")?.hint || "", /5 днів/);
 });

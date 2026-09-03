@@ -465,11 +465,121 @@ export function todayAdvice(latest, rows = [], { targetEur, targetDate, improveP
     targetEur: plan?.eurAmount ?? amount ?? null,
     targetDate: date,
     daysLeft,
+    wait: horizon?.wait ?? null,
     waitText: waitBit || null,
     dayDelta,
     cash,
     improvePp: pp,
   };
+}
+
+export function insightItems(advice = {}) {
+  const items = [];
+  const pp = advice.improvePp ?? 0.3;
+  const extra =
+    advice.extraUah == null || !advice.targetEur
+      ? ""
+      : `${Math.round(Math.abs(advice.extraUah))} грн / ${advice.targetEur} €`;
+
+  if (advice.sellUsd && advice.buyEur) {
+    items.push({ id: "now", tone: "go", kicker: "Зараз", title: "Роби", hint: "Продай $ і купи €" });
+  } else if (advice.sellUsd) {
+    items.push({ id: "now", tone: "go", kicker: "Зараз", title: "Продай $", hint: "€ поки не купуй" });
+  } else if (advice.buyEur) {
+    items.push({ id: "now", tone: "buy", kicker: "Зараз", title: "Купи €", hint: "$ поки не продавай" });
+  } else if (advice.status === "do") {
+    items.push({
+      id: "now",
+      tone: "go",
+      kicker: "Зараз",
+      title: "Можна міняти",
+      hint: extra ? `Доплата ${extra}` : "Спред у нормі",
+    });
+  } else if (advice.status === "partial") {
+    items.push({ id: "now", tone: "meh", kicker: "Зараз", title: "Трохи краще", hint: "Ще не час гнатись" });
+  } else {
+    items.push({
+      id: "now",
+      tone: "wait",
+      kicker: "Зараз",
+      title: "Не міняй",
+      hint: extra ? `Доплата ${extra}` : "Сьогодні не вигідно",
+    });
+  }
+
+  if (advice.dayDelta != null) {
+    const d = advice.dayDelta;
+    if (d >= pp) {
+      items.push({ id: "day", tone: "go", kicker: "За день", title: "Краще", hint: "Спред підріс" });
+    } else if (d <= -pp) {
+      items.push({ id: "day", tone: "bad", kicker: "За день", title: "Гірше", hint: "Спред просів" });
+    } else if (d > 0) {
+      items.push({ id: "day", tone: "meh", kicker: "За день", title: "Майже стоїть", hint: "Трохи краще зранку" });
+    } else if (d < 0) {
+      items.push({ id: "day", tone: "meh", kicker: "За день", title: "Майже стоїть", hint: "Трохи гірше зранку" });
+    } else {
+      items.push({ id: "day", tone: "meh", kicker: "За день", title: "Стоїть", hint: "Як зранку" });
+    }
+  }
+
+  const cash = advice.cash;
+  if (cash?.cardEurSale && cash?.cashEurSale) {
+    const amt = advice.targetEur;
+    if (Math.abs(cash.diff) < 0.05) {
+      items.push({
+        id: "cash",
+        tone: "meh",
+        kicker: "Картка / каса",
+        title: "Все одно",
+        hint: "Різниці майже немає",
+      });
+    } else if (cash.plays) {
+      items.push({
+        id: "cash",
+        tone: "buy",
+        kicker: "Картка / каса",
+        title: "Бери картку",
+        hint:
+          cash.extraUah != null && cash.extraUah < 0 && amt
+            ? `Дешевша ≈ ${Math.abs(Math.round(cash.extraUah))} грн / ${amt} €`
+            : "Дешевша за касу",
+      });
+    } else {
+      items.push({
+        id: "cash",
+        tone: "bad",
+        kicker: "Картка / каса",
+        title: "Бери готівку",
+        hint:
+          cash.extraUah != null && amt
+            ? `Картка +${Math.round(cash.extraUah)} грн / ${amt} €`
+            : "Каса дешевша",
+      });
+    }
+  }
+
+  if (advice.daysLeft != null) {
+    const left = daysWord(advice.daysLeft);
+    if (advice.daysLeft < 0) {
+      items.push({
+        id: "date",
+        tone: "bad",
+        kicker: "Дата",
+        title: "Вже минула",
+        hint: `${daysWord(Math.abs(advice.daysLeft))} тому`,
+      });
+    } else if (advice.daysLeft === 0) {
+      items.push({ id: "date", tone: "go", kicker: "Дата", title: "Сьогодні", hint: "Краще міняти зараз" });
+    } else if (advice.wait === true) {
+      items.push({ id: "date", tone: "wait", kicker: "Дата", title: "Почекай", hint: `Ще ${left}` });
+    } else if (advice.wait === false) {
+      items.push({ id: "date", tone: "go", kicker: "Дата", title: "Не чекай", hint: "Історія не обіцяє краще" });
+    } else {
+      items.push({ id: "date", tone: "meh", kicker: "Дата", title: `Ще ${left}`, hint: "Мало історії" });
+    }
+  }
+
+  return items;
 }
 
 export function buildAdviceFile(snapshot, rows = [], targetEur) {
