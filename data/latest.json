@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-07T10:45:29.171Z",
+  "ts": "2026-09-07T16:18:05.488Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -7,77 +7,77 @@
   "improvePp": 0.3,
   "p24": {
     "USD": {
-      "buy": 44.3,
-      "sale": 44.84305
+      "buy": 44.2,
+      "sale": 44.64286
     },
     "EUR": {
-      "buy": 51.45,
+      "buy": 51.37,
       "sale": 52.08333
     }
   },
   "business": {
     "USD": {
-      "buy": 44.3,
-      "sale": 44.7
+      "buy": 44.24,
+      "sale": 44.64
     },
     "EUR": {
-      "buy": 51.47,
-      "sale": 51.98
+      "buy": 51.41,
+      "sale": 51.92
     },
     "source": "https://otp24.privatbank.ua/api/1/info/currency/get"
   },
   "marketCash": {
     "USD": {
-      "buy": 44.15,
-      "sale": 44.75
+      "buy": 44.05,
+      "sale": 44.65
     },
     "EUR": {
-      "buy": 51.1,
-      "sale": 52.1
+      "buy": 51,
+      "sale": 52
     },
     "source": "privat-cash"
   },
   "nbu": {
-    "USD": 44.5616,
-    "EUR": 51.7882
+    "USD": 44.4654,
+    "EUR": 51.6817
   },
   "spread": {
-    "chainEurPerUsd": 0.85056,
-    "marketEurPerUsd": 0.860459,
-    "edgePct": -1.15,
-    "lossPct": 1.15,
-    "lossPer1000UsdUah": 512.63,
+    "chainEurPerUsd": 0.849408,
+    "marketEurPerUsd": 0.86037,
+    "edgePct": -1.274,
+    "lossPct": 1.274,
+    "lossPer1000UsdUah": 566.55,
     "favorable": true,
     "byThreshold": true,
     "byTopDays": false,
-    "edgeRank": 61.5
+    "edgeRank": 35.6
   },
   "profile": {
-    "extraUah": 1198,
-    "extraUsd": 27.05,
-    "usdFop": 2351.39,
+    "extraUah": 1327,
+    "extraUsd": 30,
+    "usdFop": 2354.58,
     "uahNeeded": 104167
   },
   "sides": {
-    "usdRank": 4.2,
-    "eurRank": 40.7,
+    "usdRank": 1.7,
+    "eurRank": 40.3,
     "sellUsd": false,
     "buyEur": false
   },
-  "dayDelta": -0.07,
+  "dayDelta": -0.19,
   "cash": {
-    "cashEurSale": 52.1,
+    "cashEurSale": 52,
     "cardEurSale": 52.08333,
-    "diff": -0.0167,
-    "extraUah": -33,
-    "cardVsCashPct": 0.03,
-    "plays": true,
-    "verdict": "Картка EUR майже як готівка Приват — різниці майже немає.",
+    "diff": 0.0833,
+    "extraUah": 167,
+    "cardVsCashPct": -0.16,
+    "plays": false,
+    "verdict": "Картка EUR дорожча за готівку Приват на 0.08 грн (+167 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
     "source": "privat-cash"
   },
   "advice": {
     "title": "Спред у межах порогу",
-    "action": "Ланцюжок USD→EUR ок, але жоден бік не в історичному піку. Можна конвертувати через спред. Доплата ≈ 1198 грн на 2000 EUR.",
+    "action": "Ланцюжок USD→EUR ок, але жоден бік не в історичному піку. Можна конвертувати через спред. Доплата ≈ 1327 грн на 2000 EUR.",
     "waitText": null
   }
 }
