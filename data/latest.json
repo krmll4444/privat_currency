@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-09T19:16:47.697Z",
+  "ts": "2026-09-09T21:50:06.743Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -7,11 +7,11 @@
   "improvePp": 0.3,
   "p24": {
     "USD": {
-      "buy": 44.35,
+      "buy": 44.4,
       "sale": 44.84305
     },
     "EUR": {
-      "buy": 51.59,
+      "buy": 51.69,
       "sale": 52.35602
     }
   },
@@ -32,8 +32,8 @@
       "sale": 44.85
     },
     "EUR": {
-      "buy": 51.35,
-      "sale": 52.35
+      "buy": 51.4,
+      "sale": 52.4
     },
     "source": "privat-cash"
   },
@@ -50,7 +50,7 @@
     "favorable": true,
     "byThreshold": true,
     "byTopDays": false,
-    "edgeRank": 69.7
+    "edgeRank": 69.2
   },
   "profile": {
     "extraUah": 1165,
@@ -59,18 +59,18 @@
     "uahNeeded": 104712
   },
   "sides": {
-    "usdRank": 56.4,
-    "eurRank": 85,
+    "usdRank": 56,
+    "eurRank": 84.3,
     "sellUsd": false,
     "buyEur": false
   },
-  "dayDelta": 0.64,
+  "dayDelta": 0,
   "cash": {
-    "cashEurSale": 52.35,
+    "cashEurSale": 52.4,
     "cardEurSale": 52.35602,
-    "diff": 0.006,
-    "extraUah": 12,
-    "cardVsCashPct": -0.01,
+    "diff": -0.044,
+    "extraUah": -88,
+    "cardVsCashPct": 0.08,
     "plays": true,
     "verdict": "Картка EUR майже як готівка Приват — різниці майже немає.",
     "source": "privat-cash"
