@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-10T13:02:22.439Z",
+  "ts": "2026-09-10T16:59:38.006Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -7,12 +7,12 @@
   "improvePp": 0.3,
   "p24": {
     "USD": {
-      "buy": 44.3,
+      "buy": 44.25,
       "sale": 44.84305
     },
     "EUR": {
-      "buy": 51.56,
-      "sale": 52.35602
+      "buy": 51.36,
+      "sale": 52.08333
     }
   },
   "business": {
@@ -42,42 +42,42 @@
     "EUR": 51.7643
   },
   "spread": {
-    "chainEurPerUsd": 0.84804,
+    "chainEurPerUsd": 0.85248,
     "marketEurPerUsd": 0.860682,
-    "edgePct": -1.469,
-    "lossPct": 1.469,
-    "lossPer1000UsdUah": 654.4,
-    "favorable": false,
-    "byThreshold": false,
-    "byTopDays": false,
-    "edgeRank": 13.1
+    "edgePct": -0.953,
+    "lossPct": 0.953,
+    "lossPer1000UsdUah": 424.57,
+    "favorable": true,
+    "byThreshold": true,
+    "byTopDays": true,
+    "edgeRank": 94.9
   },
   "profile": {
-    "extraUah": 1538,
-    "extraUsd": 34.64,
-    "usdFop": 2358.38,
-    "uahNeeded": 104712
+    "extraUah": 993,
+    "extraUsd": 22.36,
+    "usdFop": 2346.1,
+    "uahNeeded": 104167
   },
   "sides": {
-    "usdRank": 34.8,
-    "eurRank": 81.9,
+    "usdRank": 34.5,
+    "eurRank": 34.5,
     "sellUsd": false,
     "buyEur": false
   },
-  "dayDelta": -0.36,
+  "dayDelta": 0.16,
   "cash": {
     "cashEurSale": 52.25,
-    "cardEurSale": 52.35602,
-    "diff": 0.106,
-    "extraUah": 212,
-    "cardVsCashPct": -0.2,
-    "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.11 грн (+212 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "cardEurSale": 52.08333,
+    "diff": -0.1667,
+    "extraUah": -333,
+    "cardVsCashPct": 0.32,
+    "plays": true,
+    "verdict": "Картка EUR дешевша за готівку Приват на 0.17 грн — картка грає.",
     "source": "privat-cash"
   },
   "advice": {
-    "title": "Сьогодні не вигідно",
-    "action": "Не конвертуй USD→EUR. Доплата ≈ 1538 грн на 2000 EUR.",
+    "title": "Спред у межах порогу",
+    "action": "Ланцюжок USD→EUR ок, але жоден бік не в історичному піку. Можна конвертувати через спред. Доплата ≈ 993 грн на 2000 EUR.",
     "waitText": null
   }
 }
