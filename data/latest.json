@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-10T21:54:36.151Z",
+  "ts": "2026-09-10T23:47:07.016Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -59,8 +59,8 @@
     "uahNeeded": 104167
   },
   "sides": {
-    "usdRank": 34,
-    "eurRank": 34,
+    "usdRank": 33.8,
+    "eurRank": 33.8,
     "sellUsd": false,
     "buyEur": false
   },
