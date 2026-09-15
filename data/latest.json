@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-15T20:24:47.221Z",
+  "ts": "2026-09-15T23:04:12.973Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -11,7 +11,7 @@
       "sale": 44.84305
     },
     "EUR": {
-      "buy": 51.21,
+      "buy": 51.26,
       "sale": 52.08333
     }
   },
@@ -28,12 +28,12 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.2,
-      "sale": 44.8
+      "buy": 44.25,
+      "sale": 44.85
     },
     "EUR": {
-      "buy": 50.8,
-      "sale": 51.8
+      "buy": 50.9,
+      "sale": 51.9
     },
     "source": "privat-cash"
   },
@@ -50,7 +50,7 @@
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 17
+    "edgeRank": 16.9
   },
   "profile": {
     "extraUah": 1485,
@@ -59,20 +59,20 @@
     "uahNeeded": 104167
   },
   "sides": {
-    "usdRank": 72.9,
-    "eurRank": 27.1,
+    "usdRank": 72.5,
+    "eurRank": 27,
     "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": 0.2,
+  "dayDelta": 0,
   "cash": {
-    "cashEurSale": 51.8,
+    "cashEurSale": 51.9,
     "cardEurSale": 52.08333,
-    "diff": 0.2833,
-    "extraUah": 567,
-    "cardVsCashPct": -0.54,
+    "diff": 0.1833,
+    "extraUah": 367,
+    "cardVsCashPct": -0.35,
     "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.28 грн (+567 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "verdict": "Картка EUR дорожча за готівку Приват на 0.18 грн (+367 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
     "source": "privat-cash"
   },
   "advice": {
