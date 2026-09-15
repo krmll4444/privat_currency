@@ -25,6 +25,7 @@ export async function sendTelegram(text) {
     const body = await res.text().catch(() => "");
     throw new Error(`Telegram HTTP ${res.status}: ${body.slice(0, 300)}`);
   }
+  console.log("Telegram: повідомлення надіслано");
   return true;
 }
 

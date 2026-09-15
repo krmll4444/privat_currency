@@ -151,14 +151,18 @@ async function main() {
   );
 
   if (decision.send && !noTelegram) {
-    await sendTelegram(formatAlert(snapshot));
-    await writeState({
-      ...state,
-      lastNotifyAt: snapshot.ts,
-      lastEdgePct: snapshot.spread.edgePct,
-      lastNotifyKind: decision.reason,
-      lastNotifyKinds: decision.kinds,
-    });
+    const sent = await sendTelegram(formatAlert(snapshot));
+    if (!sent) {
+      console.warn("Telegram: сигнал був, але повідомлення не пішло (немає токена або chat_id).");
+    } else {
+      await writeState({
+        ...state,
+        lastNotifyAt: snapshot.ts,
+        lastEdgePct: snapshot.spread.edgePct,
+        lastNotifyKind: decision.reason,
+        lastNotifyKinds: decision.kinds,
+      });
+    }
   }
 }
 
