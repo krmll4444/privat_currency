@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-16T19:44:05.742Z",
+  "ts": "2026-09-16T22:23:40.609Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -7,12 +7,12 @@
   "improvePp": 0.3,
   "p24": {
     "USD": {
-      "buy": 44.4,
+      "buy": 44.35,
       "sale": 44.84305
     },
     "EUR": {
-      "buy": 51.26,
-      "sale": 52.08333
+      "buy": 51.15,
+      "sale": 51.81347
     }
   },
   "business": {
@@ -28,12 +28,12 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.25,
-      "sale": 44.85
+      "buy": 44.2,
+      "sale": 44.8
     },
     "EUR": {
-      "buy": 50.9,
-      "sale": 51.9
+      "buy": 50.8,
+      "sale": 51.8
     },
     "source": "privat-cash"
   },
@@ -42,42 +42,42 @@
     "EUR": 51.449
   },
   "spread": {
-    "chainEurPerUsd": 0.852672,
+    "chainEurPerUsd": 0.857113,
     "marketEurPerUsd": 0.866919,
-    "edgePct": -1.643,
-    "lossPct": 1.643,
-    "lossPer1000UsdUah": 732.98,
-    "favorable": false,
-    "byThreshold": false,
+    "edgePct": -1.131,
+    "lossPct": 1.131,
+    "lossPer1000UsdUah": 504.49,
+    "favorable": true,
+    "byThreshold": true,
     "byTopDays": false,
-    "edgeRank": 4.9
+    "edgeRank": 70.5
   },
   "profile": {
-    "extraUah": 1712,
-    "extraUsd": 38.55,
-    "usdFop": 2345.57,
-    "uahNeeded": 104167
+    "extraUah": 1172,
+    "extraUsd": 26.39,
+    "usdFop": 2333.41,
+    "uahNeeded": 103627
   },
   "sides": {
-    "usdRank": 44.8,
-    "eurRank": 26.2,
+    "usdRank": 44.6,
+    "eurRank": 13.6,
     "sellUsd": false,
     "buyEur": true
   },
-  "dayDelta": -0.22,
+  "dayDelta": 0.51,
   "cash": {
-    "cashEurSale": 51.9,
-    "cardEurSale": 52.08333,
-    "diff": 0.1833,
-    "extraUah": 367,
-    "cardVsCashPct": -0.35,
-    "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.18 грн (+367 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "cashEurSale": 51.8,
+    "cardEurSale": 51.81347,
+    "diff": 0.0135,
+    "extraUah": 27,
+    "cardVsCashPct": -0.03,
+    "plays": true,
+    "verdict": "Картка EUR майже як готівка Приват — різниці майже немає.",
     "source": "privat-cash"
   },
   "advice": {
     "title": "Вигідно купити EUR",
-    "action": "Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. Доплата ≈ 1712 грн на 2000 EUR.",
+    "action": "Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. Доплата ≈ 1172 грн на 2000 EUR.",
     "waitText": null
   }
 }
