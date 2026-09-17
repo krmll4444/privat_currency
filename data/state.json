@@ -1,9 +1,8 @@
 {
-  "lastNotifyAt": "2026-09-16T22:23:40.609Z",
+  "lastNotifyAt": "2026-09-17T00:47:16.109Z",
   "lastEdgePct": -1.131,
-  "lastNotifyKind": "chain",
+  "lastNotifyKind": "buy-eur",
   "lastNotifyKinds": [
-    "chain",
-    "improved"
+    "buy-eur"
   ]
 }
