@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-18T09:50:28.293Z",
+  "ts": "2026-09-18T14:08:45.496Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -28,8 +28,8 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.2,
-      "sale": 44.8
+      "buy": 44.25,
+      "sale": 44.85
     },
     "EUR": {
       "buy": 50.7,
@@ -38,33 +38,33 @@
     "source": "privat-cash"
   },
   "nbu": {
-    "USD": 44.6648,
-    "EUR": 51.2372
+    "USD": 44.6743,
+    "EUR": 51.1981
   },
   "spread": {
     "chainEurPerUsd": 0.85885,
-    "marketEurPerUsd": 0.871726,
-    "edgePct": -1.477,
-    "lossPct": 1.477,
-    "lossPer1000UsdUah": 659.73,
+    "marketEurPerUsd": 0.872577,
+    "edgePct": -1.573,
+    "lossPct": 1.573,
+    "lossPer1000UsdUah": 702.81,
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 15.1
+    "edgeRank": 12.4
   },
   "profile": {
-    "extraUah": 1531,
-    "extraUsd": 34.4,
+    "extraUah": 1630,
+    "extraUsd": 36.63,
     "usdFop": 2328.7,
     "uahNeeded": 103627
   },
   "sides": {
-    "usdRank": 78.2,
-    "eurRank": 13,
+    "usdRank": 77.8,
+    "eurRank": 12.9,
     "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": 0.11,
+  "dayDelta": 0.02,
   "cash": {
     "cashEurSale": 51.7,
     "cardEurSale": 51.81347,
@@ -77,7 +77,7 @@
   },
   "advice": {
     "title": "Вигідно і продати USD, і купити EUR",
-    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1531 грн на 2000 EUR.",
+    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1630 грн на 2000 EUR.",
     "waitText": null
   }
 }
