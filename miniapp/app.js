@@ -104,6 +104,8 @@ function syncSettings() {
   }
 }
 
+const DATA_RAW = "https://raw.githubusercontent.com/krmll4444/privat_currency/main/data";
+
 async function loadFirst(urls) {
   let lastErr;
   for (const url of urls) {
@@ -116,6 +118,95 @@ async function loadFirst(urls) {
     }
   }
   throw lastErr || new Error("Немає даних");
+}
+
+async function fetchText(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`${url} ${res.status}`);
+  return res.text();
+}
+
+function mergeLatestIntoHistory(rows, snap) {
+  if (!snap?.ts) return rows;
+  if (rows.some((row) => row.ts === snap.ts)) return rows;
+  return [...rows, snap];
+}
+
+async function newestLatest() {
+  const bust = Date.now();
+  const urls = [
+    `./data/latest.json?t=${bust}`,
+    `../data/latest.json?t=${bust}`,
+    `${DATA_RAW}/latest.json?t=${bust}`,
+  ];
+  const results = await Promise.allSettled(urls.map(fetchText));
+  const snaps = [];
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+    try {
+      snaps.push(JSON.parse(result.value));
+    } catch {
+      /* skip broken copy */
+    }
+  }
+  if (!snaps.length) throw new Error("Немає даних");
+  snaps.sort((a, b) => (Date.parse(b.ts) || 0) - (Date.parse(a.ts) || 0));
+  return snaps[0];
+}
+
+async function newestHistory() {
+  const bust = Date.now();
+  const urls = [
+    `./data/history.jsonl?t=${bust}`,
+    `../data/history.jsonl?t=${bust}`,
+    `${DATA_RAW}/history.jsonl?t=${bust}`,
+  ];
+  const results = await Promise.allSettled(urls.map(fetchText));
+  let best = history;
+  let bestScore = history.length;
+  let bestTs = history.at(-1)?.ts ? Date.parse(history.at(-1).ts) : 0;
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+    const rows = parseJsonl(result.value);
+    const lastTs = rows.at(-1)?.ts ? Date.parse(rows.at(-1).ts) : 0;
+    if (rows.length > bestScore || lastTs > bestTs) {
+      best = rows;
+      bestScore = rows.length;
+      bestTs = lastTs;
+    }
+  }
+  return best;
+}
+
+async function reloadFromGithub() {
+  const btn = document.getElementById("reloadBtn");
+  btn?.classList.add("is-busy");
+  btn?.setAttribute("disabled", "true");
+  const prevTs = latest?.ts;
+  try {
+    const [nextLatest, nextHistory] = await Promise.all([newestLatest(), newestHistory()]);
+    latest = nextLatest;
+    history = mergeLatestIntoHistory(nextHistory, nextLatest);
+    if (!targetDate && latest.targetDate) {
+      targetDate = latest.targetDate;
+      const dateInput = document.getElementById("dateInput");
+      if (dateInput) dateInput.value = targetDate;
+    }
+    renderLatest();
+    renderCalc();
+    renderAnalysis();
+    renderCharts();
+    const meta = document.getElementById("meta");
+    if (meta && latest.ts === prevTs) {
+      meta.textContent += " · щойно перевірено, новіші тіки ще в cron (~15 хв)";
+    }
+  } catch (err) {
+    const meta = document.getElementById("meta");
+    if (meta) meta.textContent = String(err.message || err);
+  } finally {
+    btn?.classList.remove("is-busy");
+    btn?.removeAttribute("disabled");
+  }
 }
 
 function parseJsonl(text) {
@@ -467,6 +558,7 @@ function bindUi() {
     });
   }
   document.getElementById("openCalc")?.addEventListener("click", () => setModalOpen(true));
+  document.getElementById("reloadBtn")?.addEventListener("click", () => reloadFromGithub());
   document.getElementById("closeCalc")?.addEventListener("click", () => setModalOpen(false));
   document.getElementById("calcModal")?.addEventListener("click", (event) => {
     if (event.target.id === "calcModal") setModalOpen(false);
