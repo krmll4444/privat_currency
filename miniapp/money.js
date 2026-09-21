@@ -624,6 +624,13 @@ export function buildAdviceFile(snapshot, rows = [], targetEur) {
     chainEurPerUsd: snapshot.spread?.chainEurPerUsd ?? null,
     marketEurPerUsd: snapshot.spread?.marketEurPerUsd ?? null,
     lossPer1000UsdUah: snapshot.spread?.lossPer1000UsdUah ?? null,
+    eurUsd: snapshot.cross?.eurUsd ?? null,
+    privatEurUsd: snapshot.cross?.privatEurUsd ?? null,
+    crossLagPips: snapshot.cross?.lagPips ?? null,
+    crossNightWindow: snapshot.cross?.nightWindow ?? null,
+    crossFollow: snapshot.cross?.follow ?? null,
+    crossFollowHint: snapshot.cross?.followHint ?? null,
+    crossSource: snapshot.cross?.source ?? null,
   };
 }
 

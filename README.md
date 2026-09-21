@@ -12,6 +12,8 @@
 
 Сигнал, коли `edgePct >= SPREAD_THRESHOLD_PCT` (типово `-1.3`) **або** сьогодні в топ-`NOTIFY_TOP_PCT`% днів, **або** вигідно лише продати USD / купити EUR, **або** спред покращився на `NOTIFY_IMPROVE_PP` п.п. за день (типово `0.3`). `TARGET_DATE` дає пораду, чи варто чекати до поїздки. Картка EUR порівнюється з готівкою Приват (`coursid=5`, той самий ряд, що Minfin).
 
+Окремо стежимо за **EUR/USD кросом** (Yahoo → open.er-api → Frankfurter; Investing не скрейпимо). Алерти в Telegram, коли крос просів на `CROSS_DROP_PIPS` (типово 20 п.), наблизився до `CROSS_NEAR` (1.135) або пробив `CROSS_FLOOR` (1.13). Паралельно порівнюємо Приват (`EUR sale / USD buy`) з ринком і мітимо нічне вікно **22:00–10:00 Київ**, коли банк часто тримає зазор і не ганяється за кросом.
+
 ## Джерела курсів
 
 | Джерело | URL | Авторизація |
@@ -20,6 +22,7 @@
 | Готівка / міжбанк (довідково) | те саме, `coursid=5` | ні |
 | НБУ | `bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json` | ні |
 | **Приват Бізнес** | `https://otp24.privatbank.ua/api/1/info/currency/get` | ні |
+| **EUR/USD крос** | Yahoo `EURUSD=X` (+ фолбеки) | ні |
 
 Це той самий JSON, яким живиться віджет «Курс валют» на [сторінці логіну](https://otp24.privatbank.ua/) (`Купівля` = `B.rate`, `Продаж` = `S.rate`). Autoclient-токен не потрібен.
 
@@ -42,6 +45,10 @@ Variables (опційно):
 - `TARGET_DATE` = `2026-09-15` (поїздка / платіж; порада «чи чекати ще N днів»)
 - `NOTIFY_IMPROVE_PP` = `0.3` (алерт «стало краще за день», не лише поріг)
 - `NOTIFY_COOLDOWN_HOURS` = `6`
+- `CROSS_FLOOR` = `1.13` (алерт, коли EUR/USD на/нижче)
+- `CROSS_NEAR` = `1.135` (алерт «наближається до 1.13»)
+- `CROSS_DROP_PIPS` = `20` (алерт на спад кросу)
+- `CROSS_NOTIFY_COOLDOWN_HOURS` = `6`
 - `NOTIFY_ERRORS` = `1` якщо хочеш помилки фетчу в чат
 
 Actions → General → Workflow permissions → **Read and write**.

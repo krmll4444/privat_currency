@@ -212,6 +212,47 @@ h2 {
   gap: 12px;
 }
 
+.cross-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.cross-panel[hidden] {
+  display: none;
+}
+
+.cross-panel span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cross-panel b {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.cross-panel .hint {
+  margin: 4px 0 0;
+}
+
+.cross-panel.cross-hot {
+  background: var(--tone-buy);
+  border-color: transparent;
+}
+
+.cross-panel.cross-night {
+  background: var(--tone-wait);
+}
+
 .rates b {
   display: block;
   margin-top: 4px;
@@ -926,7 +967,8 @@ h2 {
 
   .cards,
   .calc-out,
-  .rates {
+  .rates,
+  .cross-panel {
     grid-template-columns: 1fr;
   }
 

@@ -253,6 +253,42 @@ function insightIcon(id, tone) {
   return svg;
 }
 
+function renderCross(cross) {
+  const panel = document.getElementById("crossPanel");
+  if (!panel) return;
+  if (!cross?.eurUsd && !cross?.privatEurUsd) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  const rate = document.getElementById("crossRate");
+  const meta = document.getElementById("crossMeta");
+  const lag = document.getElementById("crossLag");
+  const follow = document.getElementById("crossFollow");
+  if (rate) rate.textContent = cross.eurUsd == null ? "—" : Number(cross.eurUsd).toFixed(4);
+  if (meta) {
+    const bits = [];
+    if (cross.source) bits.push(cross.source);
+    if (cross.nbuEurUsd != null) bits.push(`НБУ ${Number(cross.nbuEurUsd).toFixed(4)}`);
+    if (cross.nightWindow) bits.push("нічне вікно");
+    meta.textContent = bits.join(" · ");
+  }
+  if (lag) {
+    if (cross.lagPips == null) lag.textContent = "—";
+    else {
+      const sign = cross.lagPips > 0 ? "+" : "";
+      lag.textContent = `${sign}${cross.lagPips} п.`;
+    }
+  }
+  if (follow) {
+    follow.textContent =
+      cross.followHint ||
+      (cross.privatEurUsd != null ? `Приват ${Number(cross.privatEurUsd).toFixed(4)}` : "");
+  }
+  panel.classList.toggle("cross-hot", cross.eurUsd != null && cross.eurUsd <= 1.135);
+  panel.classList.toggle("cross-night", Boolean(cross.nightWindow));
+}
+
 function renderInsights(advice) {
   const root = document.getElementById("insights");
   if (!root) return;
@@ -303,6 +339,7 @@ function renderLatest() {
   document.getElementById("p24Eur").textContent = fmt(latest.p24?.EUR?.sale, 5);
   document.getElementById("rateUsd")?.classList.toggle("hot", advice.sellUsd);
   document.getElementById("rateEur")?.classList.toggle("hot", advice.buyEur);
+  renderCross(latest.cross);
   renderInsights(advice);
   const ts = latest.ts ? new Date(latest.ts).toLocaleString("uk-UA") : "ще не було запуску";
   document.getElementById("meta").textContent =

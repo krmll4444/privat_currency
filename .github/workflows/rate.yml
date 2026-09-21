@@ -47,6 +47,10 @@ jobs:
           TARGET_DATE: ${{ vars.TARGET_DATE }}
           NOTIFY_IMPROVE_PP: ${{ vars.NOTIFY_IMPROVE_PP }}
           NOTIFY_COOLDOWN_HOURS: ${{ vars.NOTIFY_COOLDOWN_HOURS }}
+          CROSS_FLOOR: ${{ vars.CROSS_FLOOR }}
+          CROSS_NEAR: ${{ vars.CROSS_NEAR }}
+          CROSS_DROP_PIPS: ${{ vars.CROSS_DROP_PIPS }}
+          CROSS_NOTIFY_COOLDOWN_HOURS: ${{ vars.CROSS_NOTIFY_COOLDOWN_HOURS }}
           NOTIFY_ERRORS: ${{ vars.NOTIFY_ERRORS }}
         run: node engine/index.mjs
 

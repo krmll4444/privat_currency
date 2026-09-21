@@ -1,5 +1,11 @@
 import { loadEnv } from "./load-env.mjs";
 import { computeSpread, round, snapshotRates } from "./calc.mjs";
+import {
+  buildCrossSnapshot,
+  fetchMarketEurUsd,
+  formatCrossAlert,
+  shouldNotifyCross,
+} from "./cross.mjs";
 import { fetchAll } from "./sources.mjs";
 import {
   appendHistory,
@@ -40,13 +46,23 @@ function envNumber(name, fallback) {
 async function main() {
   const thresholdPct = envNumber("SPREAD_THRESHOLD_PCT", -1.3);
   const cooldownHours = envNumber("NOTIFY_COOLDOWN_HOURS", 6);
+  const crossCooldownHours = envNumber("CROSS_NOTIFY_COOLDOWN_HOURS", cooldownHours);
   const targetEur = envNumber("TARGET_EUR", 2000);
   const notifyTopPct = envNumber("NOTIFY_TOP_PCT", 10);
   const improvePp = envNumber("NOTIFY_IMPROVE_PP", 0.3);
+  const crossFloor = envNumber("CROSS_FLOOR", 1.13);
+  const crossNear = envNumber("CROSS_NEAR", 1.135);
+  const crossDropPips = envNumber("CROSS_DROP_PIPS", 20);
   const targetDate = (process.env.TARGET_DATE || "").trim() || null;
 
   const history = await readHistory();
   const { p24, market, nbu, business } = await fetchAll();
+  let marketCross = null;
+  try {
+    marketCross = await fetchMarketEurUsd();
+  } catch (err) {
+    console.warn("EURUSD:", err.message || err);
+  }
 
   const rawSpread = computeSpread({
     businessUsdBuy: business.USD?.buy,
@@ -68,6 +84,18 @@ async function main() {
     marketEur: nbu.EUR,
   });
 
+  const prev = history.length ? history[history.length - 1] : null;
+  const cross = buildCrossSnapshot({
+    market: marketCross,
+    businessUsdBuy: business.USD?.buy,
+    p24EurSale: p24.EUR?.sale,
+    nbuUsd: nbu.USD,
+    nbuEur: nbu.EUR,
+    prevPrivatEurUsd: prev?.cross?.privatEurUsd ?? null,
+    prevMarketEurUsd: prev?.cross?.eurUsd ?? null,
+    ts: Date.now(),
+  });
+
   const snapshot = {
     ts: new Date().toISOString(),
     thresholdPct,
@@ -75,6 +103,9 @@ async function main() {
     targetDate,
     notifyTopPct,
     improvePp,
+    crossFloor,
+    crossNear,
+    crossDropPips,
     p24: {
       USD: snapshotRates(p24.USD),
       EUR: snapshotRates(p24.EUR),
@@ -93,6 +124,7 @@ async function main() {
       USD: round(nbu.USD, 4),
       EUR: round(nbu.EUR, 4),
     },
+    cross,
     spread: {
       chainEurPerUsd: round(spread.chainEurPerUsd, 6),
       marketEurPerUsd: round(spread.marketEurPerUsd, 6),
@@ -131,6 +163,11 @@ async function main() {
 
   const state = await readState();
   const decision = shouldNotify(snapshot, state, cooldownHours, { improvePp });
+  const crossDecision = shouldNotifyCross(cross, state, crossCooldownHours, {
+    floor: crossFloor,
+    nearFloor: crossNear,
+    dropPips: crossDropPips,
+  });
 
   console.log(
     JSON.stringify(
@@ -143,27 +180,65 @@ async function main() {
         extraUah: snapshot.profile?.extraUah ?? null,
         sides: snapshot.sides,
         dayDelta: snapshot.dayDelta,
+        cross: {
+          eurUsd: cross.eurUsd,
+          source: cross.source,
+          privatEurUsd: cross.privatEurUsd,
+          lagPips: cross.lagPips,
+          nightWindow: cross.nightWindow,
+          follow: cross.follow,
+        },
         notify: decision,
+        notifyCross: crossDecision,
       },
       null,
       2,
     ),
   );
 
+  let nextState = { ...state };
+  let stateDirty = false;
+
   if (decision.send && !noTelegram) {
     const sent = await sendTelegram(formatAlert(snapshot));
     if (!sent) {
       console.warn("Telegram: сигнал був, але повідомлення не пішло (немає токена або chat_id).");
     } else {
-      await writeState({
-        ...state,
+      nextState = {
+        ...nextState,
         lastNotifyAt: snapshot.ts,
         lastEdgePct: snapshot.spread.edgePct,
         lastNotifyKind: decision.reason,
         lastNotifyKinds: decision.kinds,
-      });
+      };
+      stateDirty = true;
     }
   }
+
+  if (crossDecision.send && !noTelegram) {
+    const sent = await sendTelegram(formatCrossAlert(snapshot));
+    if (!sent) {
+      console.warn("Telegram: крос-сигнал був, але повідомлення не пішло.");
+    } else {
+      nextState = {
+        ...nextState,
+        lastCrossNotifyAt: snapshot.ts,
+        lastCrossRate: cross.eurUsd,
+        lastCrossKinds: crossDecision.kinds,
+        lastCrossKind: crossDecision.reason,
+      };
+      stateDirty = true;
+    }
+  } else if (cross?.eurUsd != null) {
+    // оновлювати базу для наступного «просів», навіть без алерту
+    const prevMarked = state.lastCrossRate;
+    if (prevMarked == null || cross.eurUsd > prevMarked) {
+      nextState = { ...nextState, lastCrossRate: cross.eurUsd };
+      stateDirty = true;
+    }
+  }
+
+  if (stateDirty) await writeState(nextState);
 }
 
 main().catch(async (err) => {

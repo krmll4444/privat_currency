@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-    <link rel="stylesheet" href="./styles.css?v=20260921a" />
+    <link rel="stylesheet" href="./styles.css?v=20260921b" />
   </head>
   <body>
     <div class="pb-strip" aria-hidden="true"></div>
@@ -48,6 +48,19 @@
           <span id="lossLabel">Доплата / 2000 EUR</span>
           <strong id="loss">—</strong>
         </article>
+      </section>
+
+      <section class="cross-panel" id="crossPanel" hidden>
+        <div>
+          <span>EUR/USD крос</span>
+          <b id="crossRate">—</b>
+          <p class="hint" id="crossMeta"></p>
+        </div>
+        <div>
+          <span>Приват vs крос</span>
+          <b id="crossLag">—</b>
+          <p class="hint" id="crossFollow"></p>
+        </div>
       </section>
 
       <section class="rates">
@@ -234,6 +247,6 @@
       <p class="chart-tip-title"></p>
       <p class="chart-tip-text"></p>
     </div>
-    <script type="module" src="./app.js?v=20260921a"></script>
+    <script type="module" src="./app.js?v=20260921b"></script>
   </body>
 </html>
