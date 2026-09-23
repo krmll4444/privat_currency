@@ -1,15 +1,16 @@
 {
-  "lastNotifyAt": "2026-09-23T01:17:11.592Z",
-  "lastEdgePct": -1.447,
-  "lastNotifyKind": "sell-usd",
+  "lastNotifyAt": "2026-09-23T06:23:28.748Z",
+  "lastEdgePct": -0.937,
+  "lastNotifyKind": "chain",
   "lastNotifyKinds": [
-    "sell-usd"
+    "chain",
+    "buy-eur",
+    "improved"
   ],
-  "lastCrossRate": 1.1455,
-  "lastCrossNotifyAt": "2026-09-22T16:26:36.379Z",
+  "lastCrossRate": 1.1429,
+  "lastCrossNotifyAt": "2026-09-23T06:23:28.748Z",
   "lastCrossKinds": [
-    "cross-drop",
-    "privat-stale"
+    "cross-drop"
   ],
   "lastCrossKind": "cross-drop"
 }
