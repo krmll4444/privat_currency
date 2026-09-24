@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-24T05:54:39.831Z",
+  "ts": "2026-09-24T11:15:11.903Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -10,29 +10,29 @@
   "crossDropPips": 20,
   "p24": {
     "USD": {
-      "buy": 44.6,
-      "sale": 45.04505
+      "buy": 44.7,
+      "sale": 45.24887
     },
     "EUR": {
-      "buy": 50.8485,
+      "buy": 50.9,
       "sale": 51.54639
     }
   },
   "business": {
     "USD": {
-      "buy": 44.63,
-      "sale": 45.03
+      "buy": 44.75,
+      "sale": 45.15
     },
     "EUR": {
-      "buy": 51.01,
-      "sale": 51.52
+      "buy": 50.88,
+      "sale": 51.39
     },
     "source": "https://otp24.privatbank.ua/api/1/info/currency/get"
   },
   "marketCash": {
     "USD": {
-      "buy": 44.45,
-      "sale": 45.05
+      "buy": 44.55,
+      "sale": 45.15
     },
     "EUR": {
       "buy": 50.55,
@@ -45,44 +45,44 @@
     "EUR": 51.1864
   },
   "cross": {
-    "eurUsd": 1.1384,
+    "eurUsd": 1.1378,
     "prevClose": 1.1388,
     "source": "yahoo",
-    "asOf": "2026-09-24T05:54:08.000Z",
+    "asOf": "2026-09-24T11:14:10.000Z",
     "nbuEurUsd": 1.1411,
-    "privatEurUsd": 1.15497,
-    "lagPct": 1.46,
-    "lagPips": 166,
-    "nightWindow": true,
-    "follow": "night-buffer",
-    "followHint": "Нічне вікно (22:00–10:00 Київ): Приват зазвичай тримає зазор і майже не ганяється за кросом.",
-    "marketMovePips": 9,
-    "privatMovePips": 0
+    "privatEurUsd": 1.15187,
+    "lagPct": 1.24,
+    "lagPips": 141,
+    "nightWindow": false,
+    "follow": "mixed",
+    "followHint": "Крос -6 п., Приват -31 п.",
+    "marketMovePips": -6,
+    "privatMovePips": -31
   },
   "spread": {
-    "chainEurPerUsd": 0.865822,
+    "chainEurPerUsd": 0.86815,
     "marketEurPerUsd": 0.876348,
-    "edgePct": -1.201,
-    "lossPct": 1.201,
-    "lossPer1000UsdUah": 538.79,
+    "edgePct": -0.935,
+    "lossPct": 0.935,
+    "lossPer1000UsdUah": 419.63,
     "favorable": true,
     "byThreshold": true,
-    "byTopDays": false,
-    "edgeRank": 66.8
+    "byTopDays": true,
+    "edgeRank": 96.6
   },
   "profile": {
-    "extraUah": 1238,
-    "extraUsd": 27.75,
-    "usdFop": 2309.94,
+    "extraUah": 964,
+    "extraUsd": 21.55,
+    "usdFop": 2303.75,
     "uahNeeded": 103093
   },
   "sides": {
-    "usdRank": 88.4,
+    "usdRank": 97.4,
     "eurRank": 2.6,
     "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": 0,
+  "dayDelta": 0.27,
   "cash": {
     "cashEurSale": 51.55,
     "cardEurSale": 51.54639,
@@ -95,7 +95,7 @@
   },
   "advice": {
     "title": "Вигідно і продати USD, і купити EUR",
-    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1238 грн на 2000 EUR.",
+    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 964 грн на 2000 EUR.",
     "waitText": null
   }
 }
