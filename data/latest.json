@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-25T12:16:24.257Z",
+  "ts": "2026-09-25T17:26:04.225Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -41,48 +41,48 @@
     "source": "privat-cash"
   },
   "nbu": {
-    "USD": 44.9729,
-    "EUR": 51.122
+    "USD": 44.8414,
+    "EUR": 51.1358
   },
   "cross": {
-    "eurUsd": 1.1405,
+    "eurUsd": 1.1393,
     "prevClose": 1.138,
     "source": "yahoo",
-    "asOf": "2026-09-25T12:16:06.000Z",
-    "nbuEurUsd": 1.13673,
+    "asOf": "2026-09-25T17:25:08.000Z",
+    "nbuEurUsd": 1.14037,
     "privatEurUsd": 1.15575,
-    "lagPct": 1.34,
-    "lagPips": 152,
+    "lagPct": 1.44,
+    "lagPips": 164,
     "nightWindow": false,
-    "follow": "tracking",
-    "followHint": "Приват рухається в бік кросу.",
-    "marketMovePips": 21,
-    "privatMovePips": 52
+    "follow": "mixed",
+    "followHint": "Крос -12 п., Приват 0 п.",
+    "marketMovePips": -12,
+    "privatMovePips": 0
   },
   "spread": {
     "chainEurPerUsd": 0.86524,
-    "marketEurPerUsd": 0.879717,
-    "edgePct": -1.646,
-    "lossPct": 1.646,
-    "lossPer1000UsdUah": 740.1,
+    "marketEurPerUsd": 0.876908,
+    "edgePct": -1.331,
+    "lossPct": 1.331,
+    "lossPer1000UsdUah": 596.66,
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 3.8
+    "edgeRank": 39.6
   },
   "profile": {
-    "extraUah": 1697,
-    "extraUsd": 38.04,
+    "extraUah": 1372,
+    "extraUsd": 30.76,
     "usdFop": 2311.5,
     "uahNeeded": 103093
   },
   "sides": {
-    "usdRank": 82.5,
+    "usdRank": 82.2,
     "eurRank": 2.5,
     "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": -0.33,
+  "dayDelta": -0.02,
   "cash": {
     "cashEurSale": 51.5,
     "cardEurSale": 51.54639,
@@ -95,7 +95,7 @@
   },
   "advice": {
     "title": "Вигідно і продати USD, і купити EUR",
-    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1697 грн на 2000 EUR.",
+    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1372 грн на 2000 EUR.",
     "waitText": null
   }
 }
