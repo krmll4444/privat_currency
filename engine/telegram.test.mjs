@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatAlert, shouldNotify } from "./telegram.mjs";
+import { formatAlert, isTelegramSoundHours, shouldNotify } from "./telegram.mjs";
 
 test("немає сигналу, якщо не вигідно", () => {
   const d = shouldNotify({ spread: { favorable: false } }, {}, 6);
@@ -80,4 +80,14 @@ test("новий бік пробиває cooldown", () => {
   );
   assert.equal(d.send, true);
   assert.equal(d.reason, "buy-eur");
+});
+
+test("звук лише пн–пт 08:00–19:00 Київ", () => {
+  // 2026-09-28 = понеділок, Київ = UTC+3 (літо)
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-28T04:59:00Z")), false); // 07:59
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-28T05:00:00Z")), true); // 08:00
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-28T15:59:00Z")), true); // 18:59
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-28T16:00:00Z")), false); // 19:00
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-26T09:00:00Z")), false); // субота
+  assert.equal(isTelegramSoundHours(Date.parse("2026-09-27T12:00:00Z")), false); // неділя
 });

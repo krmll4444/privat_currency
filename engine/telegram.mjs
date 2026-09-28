@@ -2,13 +2,57 @@ import { notifyKinds } from "../miniapp/money.js";
 
 const API = "https://api.telegram.org";
 
-export async function sendTelegram(text) {
+/** weekday: 1=пн … 7=нд (ISO). */
+export function kyivParts(ts = Date.now()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Kyiv",
+    weekday: "short",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(ts));
+  const pick = (type) => parts.find((p) => p.type === type)?.value;
+  const wd = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 }[pick("weekday")];
+  return {
+    weekday: wd ?? 1,
+    hour: Number(pick("hour") ?? 0),
+  };
+}
+
+/**
+ * Звук лише пн–пт 08:00–19:00 за Києвом.
+ * Сб–нд і пн–пт з 19:00 до 08:00 — беззвучно (disable_notification).
+ */
+export function isTelegramSoundHours(
+  ts = Date.now(),
+  { startHour = 8, endHour = 19 } = {},
+) {
+  const { weekday, hour } = kyivParts(ts);
+  if (weekday >= 6) return false;
+  return hour >= startHour && hour < endHour;
+}
+
+export function telegramQuietOpts(ts = Date.now()) {
+  const startHour = Number(process.env.TELEGRAM_SOUND_START ?? 8);
+  const endHour = Number(process.env.TELEGRAM_SOUND_END ?? 19);
+  const sound = isTelegramSoundHours(ts, {
+    startHour: Number.isFinite(startHour) ? startHour : 8,
+    endHour: Number.isFinite(endHour) ? endHour : 19,
+  });
+  return { silent: !sound, sound };
+}
+
+export async function sendTelegram(text, opts = {}) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) {
     console.warn("Telegram: немає TELEGRAM_BOT_TOKEN або TELEGRAM_CHAT_ID — пропуск.");
     return false;
   }
+
+  const { silent, sound } =
+    opts.silent != null
+      ? { silent: Boolean(opts.silent), sound: !opts.silent }
+      : telegramQuietOpts(opts.ts ?? Date.now());
 
   const res = await fetch(`${API}/bot${token}/sendMessage`, {
     method: "POST",
@@ -18,6 +62,7 @@ export async function sendTelegram(text) {
       text,
       parse_mode: "HTML",
       disable_web_page_preview: true,
+      disable_notification: silent,
     }),
   });
 
@@ -25,7 +70,7 @@ export async function sendTelegram(text) {
     const body = await res.text().catch(() => "");
     throw new Error(`Telegram HTTP ${res.status}: ${body.slice(0, 300)}`);
   }
-  console.log("Telegram: повідомлення надіслано");
+  console.log(`Telegram: повідомлення надіслано (${sound ? "зі звуком" : "беззвучно"})`);
   return true;
 }
 

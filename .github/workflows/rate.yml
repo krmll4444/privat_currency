@@ -51,6 +51,8 @@ jobs:
           CROSS_NEAR: ${{ vars.CROSS_NEAR }}
           CROSS_DROP_PIPS: ${{ vars.CROSS_DROP_PIPS }}
           CROSS_NOTIFY_COOLDOWN_HOURS: ${{ vars.CROSS_NOTIFY_COOLDOWN_HOURS }}
+          TELEGRAM_SOUND_START: ${{ vars.TELEGRAM_SOUND_START }}
+          TELEGRAM_SOUND_END: ${{ vars.TELEGRAM_SOUND_END }}
           NOTIFY_ERRORS: ${{ vars.NOTIFY_ERRORS }}
         run: node engine/index.mjs
 

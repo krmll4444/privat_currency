@@ -49,6 +49,7 @@ Variables (опційно):
 - `CROSS_NEAR` = `1.135` (алерт «наближається до 1.13»)
 - `CROSS_DROP_PIPS` = `20` (алерт на спад кросу)
 - `CROSS_NOTIFY_COOLDOWN_HOURS` = `6`
+- `TELEGRAM_SOUND_START` = `8` / `TELEGRAM_SOUND_END` = `19` (звук лише пн–пт у цьому вікні за Києвом; сб–нд і ніч — беззвучно)
 - `NOTIFY_ERRORS` = `1` якщо хочеш помилки фетчу в чат
 
 Actions → General → Workflow permissions → **Read and write**.
