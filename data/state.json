@@ -6,10 +6,11 @@
     "chain",
     "buy-eur"
   ],
-  "lastCrossRate": 1.1356,
-  "lastCrossNotifyAt": "2026-09-29T22:57:37.370Z",
+  "lastCrossRate": 1.1328,
+  "lastCrossNotifyAt": "2026-09-30T20:01:34.555Z",
   "lastCrossKinds": [
+    "cross-drop",
     "cross-near"
   ],
-  "lastCrossKind": "cross-near"
+  "lastCrossKind": "cross-drop"
 }
