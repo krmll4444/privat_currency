@@ -1,12 +1,11 @@
 {
-  "lastNotifyAt": "2026-09-30T15:07:27.743Z",
-  "lastEdgePct": -1,
-  "lastNotifyKind": "chain",
+  "lastNotifyAt": "2026-09-30T23:49:57.847Z",
+  "lastEdgePct": -1.505,
+  "lastNotifyKind": "buy-eur",
   "lastNotifyKinds": [
-    "chain",
     "buy-eur"
   ],
-  "lastCrossRate": 1.1328,
+  "lastCrossRate": 1.1333,
   "lastCrossNotifyAt": "2026-09-30T20:01:34.555Z",
   "lastCrossKinds": [
     "cross-drop",
