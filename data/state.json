@@ -5,11 +5,10 @@
   "lastNotifyKinds": [
     "buy-eur"
   ],
-  "lastCrossRate": 1.1333,
-  "lastCrossNotifyAt": "2026-09-30T20:01:34.555Z",
+  "lastCrossRate": 1.1325,
+  "lastCrossNotifyAt": "2026-10-01T04:35:26.849Z",
   "lastCrossKinds": [
-    "cross-drop",
     "cross-near"
   ],
-  "lastCrossKind": "cross-drop"
+  "lastCrossKind": "cross-near"
 }
