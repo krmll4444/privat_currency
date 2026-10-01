@@ -1,5 +1,5 @@
 {
-  "ts": "2026-10-01T04:35:26.849Z",
+  "ts": "2026-10-01T11:11:26.134Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -10,18 +10,18 @@
   "crossDropPips": 20,
   "p24": {
     "USD": {
-      "buy": 44.4,
-      "sale": 44.84305
+      "buy": 44.55,
+      "sale": 45.04505
     },
     "EUR": {
-      "buy": 50.48,
-      "sale": 51.28205
+      "buy": 50.35,
+      "sale": 51.02041
     }
   },
   "business": {
     "USD": {
-      "buy": 44.5,
-      "sale": 44.9
+      "buy": 44.7,
+      "sale": 45.1
     },
     "EUR": {
       "buy": 50.47,
@@ -31,12 +31,12 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.25,
-      "sale": 44.85
+      "buy": 44.4,
+      "sale": 45
     },
     "EUR": {
-      "buy": 50.2,
-      "sale": 51.2
+      "buy": 50,
+      "sale": 51
     },
     "source": "privat-cash"
   },
@@ -45,57 +45,57 @@
     "EUR": 50.7166
   },
   "cross": {
-    "eurUsd": 1.1325,
+    "eurUsd": 1.1296,
     "prevClose": 1.1334,
     "source": "yahoo",
-    "asOf": "2026-10-01T04:35:00.000Z",
+    "asOf": "2026-10-01T11:10:58.000Z",
     "nbuEurUsd": 1.13506,
-    "privatEurUsd": 1.15241,
-    "lagPct": 1.76,
-    "lagPips": 199,
-    "nightWindow": true,
-    "follow": "night-buffer",
-    "followHint": "Нічне вікно (22:00–10:00 Київ): Приват зазвичай тримає зазор і майже не ганяється за кросом.",
-    "marketMovePips": -8,
-    "privatMovePips": 0
+    "privatEurUsd": 1.1414,
+    "lagPct": 1.04,
+    "lagPips": 118,
+    "nightWindow": false,
+    "follow": "tracking",
+    "followHint": "Приват рухається в бік кросу.",
+    "marketMovePips": -29,
+    "privatMovePips": -110
   },
   "spread": {
-    "chainEurPerUsd": 0.86775,
+    "chainEurPerUsd": 0.87612,
     "marketEurPerUsd": 0.881011,
-    "edgePct": -1.505,
-    "lossPct": 1.505,
-    "lossPer1000UsdUah": 672.57,
-    "favorable": false,
-    "byThreshold": false,
-    "byTopDays": false,
-    "edgeRank": 20
+    "edgePct": -0.555,
+    "lossPct": 0.555,
+    "lossPer1000UsdUah": 248.07,
+    "favorable": true,
+    "byThreshold": true,
+    "byTopDays": true,
+    "edgeRank": 99.6
   },
   "profile": {
-    "extraUah": 1544,
-    "extraUsd": 34.69,
-    "usdFop": 2304.81,
-    "uahNeeded": 102564
+    "extraUah": 567,
+    "extraUsd": 12.67,
+    "usdFop": 2282.79,
+    "uahNeeded": 102041
   },
   "sides": {
-    "usdRank": 55.7,
-    "eurRank": 0.7,
-    "sellUsd": false,
+    "usdRank": 93.8,
+    "eurRank": 0,
+    "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": 0,
+  "dayDelta": 0.95,
   "cash": {
-    "cashEurSale": 51.2,
-    "cardEurSale": 51.28205,
-    "diff": 0.082,
-    "extraUah": 164,
-    "cardVsCashPct": -0.16,
-    "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.08 грн (+164 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "cashEurSale": 51,
+    "cardEurSale": 51.02041,
+    "diff": 0.0204,
+    "extraUah": 41,
+    "cardVsCashPct": -0.04,
+    "plays": true,
+    "verdict": "Картка EUR майже як готівка Приват — різниці майже немає.",
     "source": "privat-cash"
   },
   "advice": {
-    "title": "Вигідно купити EUR",
-    "action": "Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. Доплата ≈ 1544 грн на 2000 EUR.",
+    "title": "Вигідно і продати USD, і купити EUR",
+    "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 567 грн на 2000 EUR.",
     "waitText": null
   }
 }
