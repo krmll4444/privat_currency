@@ -1,5 +1,5 @@
 {
-  "ts": "2026-10-07T19:26:52.384Z",
+  "ts": "2026-10-07T23:42:08.819Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -10,11 +10,11 @@
   "crossDropPips": 20,
   "p24": {
     "USD": {
-      "buy": 44.65,
+      "buy": 44.6,
       "sale": 45.04505
     },
     "EUR": {
-      "buy": 49.95,
+      "buy": 49.82,
       "sale": 50.76142
     }
   },
@@ -31,12 +31,12 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.5,
-      "sale": 45.1
+      "buy": 44.45,
+      "sale": 45.05
     },
     "EUR": {
-      "buy": 49.7,
-      "sale": 50.7
+      "buy": 49.55,
+      "sale": 50.55
     },
     "source": "privat-cash"
   },
@@ -45,18 +45,18 @@
     "EUR": 50.1569
   },
   "cross": {
-    "eurUsd": 1.1201,
-    "prevClose": 1.1263,
+    "eurUsd": 1.1206,
+    "prevClose": 1.1199,
     "source": "yahoo",
-    "asOf": "2026-10-07T19:25:51.000Z",
+    "asOf": "2026-10-07T23:41:51.000Z",
     "nbuEurUsd": 1.11798,
     "privatEurUsd": 1.13815,
-    "lagPct": 1.61,
-    "lagPips": 180,
+    "lagPct": 1.57,
+    "lagPips": 175,
     "nightWindow": true,
     "follow": "night-buffer",
     "followHint": "Нічне вікно (22:00–10:00 Київ): Приват зазвичай тримає зазор і майже не ганяється за кросом.",
-    "marketMovePips": 19,
+    "marketMovePips": 5,
     "privatMovePips": 0
   },
   "spread": {
@@ -77,20 +77,20 @@
     "uahNeeded": 101523
   },
   "sides": {
-    "usdRank": 67.4,
+    "usdRank": 67.2,
     "eurRank": 0,
     "sellUsd": false,
     "buyEur": true
   },
-  "dayDelta": -0.46,
+  "dayDelta": 0,
   "cash": {
-    "cashEurSale": 50.7,
+    "cashEurSale": 50.55,
     "cardEurSale": 50.76142,
-    "diff": 0.0614,
-    "extraUah": 123,
-    "cardVsCashPct": -0.12,
+    "diff": 0.2114,
+    "extraUah": 423,
+    "cardVsCashPct": -0.42,
     "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.06 грн (+123 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "verdict": "Картка EUR дорожча за готівку Приват на 0.21 грн (+423 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
     "source": "privat-cash"
   },
   "advice": {
