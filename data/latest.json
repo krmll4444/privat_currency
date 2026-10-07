@@ -1,5 +1,5 @@
 {
-  "ts": "2026-10-06T20:30:38.216Z",
+  "ts": "2026-10-07T00:09:21.968Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -10,11 +10,11 @@
   "crossDropPips": 20,
   "p24": {
     "USD": {
-      "buy": 44.75,
+      "buy": 44.65,
       "sale": 45.24887
     },
     "EUR": {
-      "buy": 50.19,
+      "buy": 50.28,
       "sale": 51.02041
     }
   },
@@ -31,12 +31,12 @@
   },
   "marketCash": {
     "USD": {
-      "buy": 44.6,
-      "sale": 45.2
+      "buy": 44.5,
+      "sale": 45.1
     },
     "EUR": {
-      "buy": 49.95,
-      "sale": 50.95
+      "buy": 49.85,
+      "sale": 50.85
     },
     "source": "privat-cash"
   },
@@ -45,18 +45,18 @@
     "EUR": 50.6394
   },
   "cross": {
-    "eurUsd": 1.1264,
-    "prevClose": 1.1223,
+    "eurUsd": 1.1254,
+    "prevClose": 1.1263,
     "source": "yahoo",
-    "asOf": "2026-10-06T20:29:47.000Z",
+    "asOf": "2026-10-07T00:08:51.000Z",
     "nbuEurUsd": 1.12669,
     "privatEurUsd": 1.14165,
-    "lagPct": 1.35,
-    "lagPips": 153,
+    "lagPct": 1.44,
+    "lagPips": 163,
     "nightWindow": true,
     "follow": "night-buffer",
     "followHint": "Нічне вікно (22:00–10:00 Київ): Приват зазвичай тримає зазор і майже не ганяється за кросом.",
-    "marketMovePips": -5,
+    "marketMovePips": -10,
     "privatMovePips": 0
   },
   "spread": {
@@ -68,7 +68,7 @@
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 52.4
+    "edgeRank": 52.5
   },
   "profile": {
     "extraUah": 1337,
@@ -77,20 +77,20 @@
     "uahNeeded": 102041
   },
   "sides": {
-    "usdRank": 85.9,
+    "usdRank": 85.6,
     "eurRank": 0,
     "sellUsd": true,
     "buyEur": true
   },
-  "dayDelta": 0.24,
+  "dayDelta": 0,
   "cash": {
-    "cashEurSale": 50.95,
+    "cashEurSale": 50.85,
     "cardEurSale": 51.02041,
-    "diff": 0.0704,
-    "extraUah": 141,
-    "cardVsCashPct": -0.14,
+    "diff": 0.1704,
+    "extraUah": 341,
+    "cardVsCashPct": -0.33,
     "plays": false,
-    "verdict": "Картка EUR дорожча за готівку Приват на 0.07 грн (+141 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
+    "verdict": "Картка EUR дорожча за готівку Приват на 0.17 грн (+341 грн на 2000 EUR). Картка не грає, якщо можеш купити кеш.",
     "source": "privat-cash"
   },
   "advice": {
