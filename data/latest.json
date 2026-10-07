@@ -1,5 +1,5 @@
 {
-  "ts": "2026-10-07T00:09:21.968Z",
+  "ts": "2026-10-07T06:01:13.017Z",
   "thresholdPct": -1.3,
   "targetEur": 2000,
   "targetDate": null,
@@ -45,18 +45,18 @@
     "EUR": 50.6394
   },
   "cross": {
-    "eurUsd": 1.1254,
+    "eurUsd": 1.1232,
     "prevClose": 1.1263,
     "source": "yahoo",
-    "asOf": "2026-10-07T00:08:51.000Z",
+    "asOf": "2026-10-07T06:00:48.000Z",
     "nbuEurUsd": 1.12669,
     "privatEurUsd": 1.14165,
-    "lagPct": 1.44,
-    "lagPips": 163,
+    "lagPct": 1.64,
+    "lagPips": 185,
     "nightWindow": true,
     "follow": "night-buffer",
     "followHint": "Нічне вікно (22:00–10:00 Київ): Приват зазвичай тримає зазор і майже не ганяється за кросом.",
-    "marketMovePips": -10,
+    "marketMovePips": -22,
     "privatMovePips": 0
   },
   "spread": {
@@ -68,7 +68,7 @@
     "favorable": false,
     "byThreshold": false,
     "byTopDays": false,
-    "edgeRank": 52.5
+    "edgeRank": 52.7
   },
   "profile": {
     "extraUah": 1337,
@@ -77,7 +77,7 @@
     "uahNeeded": 102041
   },
   "sides": {
-    "usdRank": 85.6,
+    "usdRank": 85.3,
     "eurRank": 0,
     "sellUsd": true,
     "buyEur": true
