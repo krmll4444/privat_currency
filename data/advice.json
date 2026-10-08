@@ -1,11 +1,11 @@
 {
-  "ts": "2026-10-07T23:42:08.819Z",
+  "ts": "2026-10-08T02:59:03.864Z",
   "status": "partial",
   "title": "Вигідно купити EUR",
   "action": "Купи євро в Приват24 (курс низький). USD на ФОП зараз слабкий — можна не продавати. Доплата ≈ 1799 грн на 2000 EUR.",
   "sellUsd": false,
   "buyEur": true,
-  "usdRank": 67.2,
+  "usdRank": 67,
   "eurRank": 0,
   "edgePct": -1.772,
   "favorable": false,
