@@ -6,7 +6,7 @@
     "sell-usd",
     "buy-eur"
   ],
-  "lastCrossRate": 1.1202,
+  "lastCrossRate": 1.1217,
   "lastCrossNotifyAt": "2026-10-11T22:17:24.669Z",
   "lastCrossKinds": [
     "cross-floor"
