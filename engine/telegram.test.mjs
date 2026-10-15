@@ -29,7 +29,7 @@ test("алерт показує доплату на профільну суму 
     notifyTopPct: 10,
     business: { USD: { buy: 44.42 } },
     p24: { EUR: { sale: 52.08333 } },
-    sides: { sellUsd: true, buyEur: false, usdRank: 82, eurRank: 61 },
+    sides: { sellUsd: true, buyEur: false, usdRank: 82, eurRank: 61, eurBeatPct: 39 },
     dayDelta: 0.31,
     cash: { verdict: "Картка EUR дорожча за готівку Приват на 0.13 грн." },
     advice: { title: "Вигідно продати USD", waitText: "Зачекати ще 5 днів має сенс, якщо ловиш кращий день." },
@@ -50,6 +50,28 @@ test("алерт показує доплату на профільну суму 
   assert.match(text, /0\.31 п\.п/);
   assert.match(text, /готівку/);
   assert.match(text, /5 днів/);
+});
+
+test("алерт EUR: дешевше за beatPct днів, не 100% при нічиїх", () => {
+  const text = formatAlert({
+    thresholdPct: -1.3,
+    targetEur: 2000,
+    notifyTopPct: 10,
+    business: { USD: { buy: 44 } },
+    p24: { EUR: { sale: 50.76 } },
+    sides: { sellUsd: false, buyEur: true, usdRank: 40, eurRank: 0, eurBeatPct: 68 },
+    spread: {
+      chainEurPerUsd: 0.88,
+      marketEurPerUsd: 0.89,
+      edgePct: -1.1,
+      byThreshold: true,
+      byTopDays: false,
+      lossPer1000UsdUah: 400,
+    },
+    profile: { extraUah: 1000 },
+  });
+  assert.match(text, /дешевше за 68% днів/);
+  assert.doesNotMatch(text, /дешевше за 100%/);
 });
 
 test("сигнал з одного боку, навіть якщо ланцюжок поганий", () => {

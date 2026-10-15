@@ -71,11 +71,8 @@ async function main() {
     marketEur: nbu.EUR,
     thresholdPct,
   });
-  const spread = applyRankFavorable(
-    rawSpread,
-    history.map((row) => row.spread?.edgePct),
-    notifyTopPct,
-  );
+  const nowTs = Date.now();
+  const spread = applyRankFavorable(rawSpread, history, notifyTopPct, nowTs);
   const plan = planEurPurchase({
     eurAmount: targetEur,
     businessUsdBuy: business.USD?.buy,
@@ -97,7 +94,7 @@ async function main() {
   });
 
   const snapshot = {
-    ts: new Date().toISOString(),
+    ts: new Date(nowTs).toISOString(),
     thresholdPct,
     targetEur,
     targetDate,

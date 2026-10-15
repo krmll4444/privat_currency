@@ -39,6 +39,17 @@ export function percentileRank(value, values) {
   return (below / nums.length) * 100;
 }
 
+/** Частка значень строго більших за value (для «дешевше за X%»). */
+export function shareAbove(value, values) {
+  const nums = values.filter((v) => v != null && !Number.isNaN(v));
+  if (!nums.length || value == null) return null;
+  return (nums.filter((v) => v > value).length / nums.length) * 100;
+}
+
+function roundRank(n) {
+  return n == null ? null : Math.round(n * 10) / 10;
+}
+
 export function kyivYmd(ts = Date.now()) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Kyiv",
@@ -65,16 +76,57 @@ export function daysWord(n) {
   return `${n} днів`;
 }
 
+/** По одному рівню на день (Київ): max USD buy, min EUR sale. Без ts — кожен рядок як окремий день. */
+export function dailySideLevels(rows = []) {
+  const byDay = new Map();
+  let anon = 0;
+  for (const row of rows) {
+    let day;
+    if (row?.ts) {
+      const ts = Date.parse(row.ts);
+      if (!Number.isFinite(ts)) continue;
+      day = kyivYmd(ts);
+    } else {
+      day = `__${anon++}`;
+    }
+    const usd = row.business?.USD?.buy;
+    const eur = row.p24?.EUR?.sale;
+    const prev = byDay.get(day) || { usd: null, eur: null };
+    byDay.set(day, {
+      usd: usd == null ? prev.usd : prev.usd == null ? usd : Math.max(prev.usd, usd),
+      eur: eur == null ? prev.eur : prev.eur == null ? eur : Math.min(prev.eur, eur),
+    });
+  }
+  return [...byDay.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, v]) => ({ date, usd: v.usd, eur: v.eur }));
+}
+
 export function sideSignals(latest, rows = [], { usdPct = 70, eurPct = 30 } = {}) {
-  const usd = rows.map((r) => r.business?.USD?.buy).filter((v) => v != null);
-  const eur = rows.map((r) => r.p24?.EUR?.sale).filter((v) => v != null);
-  const usdRank = percentileRank(latest?.business?.USD?.buy, usd);
-  const eurRank = percentileRank(latest?.p24?.EUR?.sale, eur);
+  const usdNow = latest?.business?.USD?.buy;
+  const eurNow = latest?.p24?.EUR?.sale;
+  const byDay = new Map(
+    dailySideLevels(rows).map((l) => [l.date, { usd: l.usd, eur: l.eur }]),
+  );
+  const nowTs = Date.parse(latest?.ts) || Date.now();
+  const today = kyivYmd(nowTs);
+  const prev = byDay.get(today) || { usd: null, eur: null };
+  byDay.set(today, {
+    usd: usdNow == null ? prev.usd : prev.usd == null ? usdNow : Math.max(prev.usd, usdNow),
+    eur: eurNow == null ? prev.eur : prev.eur == null ? eurNow : Math.min(prev.eur, eurNow),
+  });
+  const usd = [...byDay.values()].map((v) => v.usd).filter((v) => v != null);
+  const eur = [...byDay.values()].map((v) => v.eur).filter((v) => v != null);
+  const usdRank = percentileRank(usdNow, usd);
+  const eurRank = percentileRank(eurNow, eur);
+  const eurBeatPct = shareAbove(eurNow, eur);
+  const enough = usd.length >= 8 && eur.length >= 8;
   return {
-    usdRank: usdRank == null ? null : Math.round(usdRank * 10) / 10,
-    eurRank: eurRank == null ? null : Math.round(eurRank * 10) / 10,
-    sellUsd: usdRank != null && usdRank >= usdPct,
-    buyEur: eurRank != null && eurRank <= eurPct,
+    usdRank: roundRank(usdRank),
+    eurRank: roundRank(eurRank),
+    eurBeatPct: roundRank(eurBeatPct),
+    sellUsd: enough && usdRank != null && usdRank >= usdPct,
+    buyEur: enough && eurRank != null && eurRank <= eurPct,
   };
 }
 
@@ -364,15 +416,37 @@ export function favorHints(edgeCandles, snaps, thresholdPct = -1) {
   return out;
 }
 
-export function applyRankFavorable(spread, historyEdges, topPct = 10) {
+/**
+ * Ранг по денних best edge (Київ), не по тіках.
+ * Якщо передано масив чисел — вважаємо їх уже денними (тести / legacy).
+ */
+export function dailyEdgeValues(historyEdgesOrRows, currentEdge, nowTs = Date.now()) {
+  const list = historyEdgesOrRows || [];
+  if (!list.length) {
+    return currentEdge != null && !Number.isNaN(currentEdge) ? [currentEdge] : [];
+  }
+  const sample = list.find((v) => v != null);
+  if (typeof sample === "number") {
+    return list.filter((v) => v != null && !Number.isNaN(v));
+  }
+  const byDay = new Map(dailyBestEdges(list).map((d) => [d.date, d.edgePct]));
+  if (currentEdge != null && !Number.isNaN(currentEdge)) {
+    const day = kyivYmd(nowTs);
+    const prev = byDay.get(day);
+    if (prev == null || currentEdge > prev) byDay.set(day, currentEdge);
+  }
+  return [...byDay.values()];
+}
+
+export function applyRankFavorable(spread, historyEdgesOrRows, topPct = 10, nowTs = Date.now()) {
   const byThreshold = Boolean(spread.favorable);
-  const nums = (historyEdges || []).filter((v) => v != null && !Number.isNaN(v));
+  const nums = dailyEdgeValues(historyEdgesOrRows, spread.edgePct, nowTs);
   const rank = percentileRank(spread.edgePct, nums);
   const byTopDays =
     rank != null && nums.length >= 8 && topPct > 0 && rank >= 100 - topPct;
   return {
     ...spread,
-    edgeRank: rank == null ? null : Math.round(rank * 10) / 10,
+    edgeRank: roundRank(rank),
     byThreshold,
     byTopDays,
     favorable: byThreshold || byTopDays,
@@ -460,6 +534,7 @@ export function todayAdvice(latest, rows = [], { targetEur, targetDate, improveP
     buyEur: sides.buyEur,
     usdRank: sides.usdRank,
     eurRank: sides.eurRank,
+    eurBeatPct: sides.eurBeatPct,
     plan,
     extraUah: plan?.extraUah ?? null,
     targetEur: plan?.eurAmount ?? amount ?? null,
@@ -601,6 +676,7 @@ export function buildAdviceFile(snapshot, rows = [], targetEur) {
     buyEur: advice.buyEur,
     usdRank: advice.usdRank,
     eurRank: advice.eurRank,
+    eurBeatPct: advice.eurBeatPct,
     edgePct: snapshot.spread?.edgePct ?? null,
     favorable: Boolean(snapshot.spread?.favorable),
     byThreshold: Boolean(snapshot.spread?.byThreshold),
@@ -778,17 +854,21 @@ export function analyze(rows, latest) {
     notes.push({
       tone: advice.sellUsd ? "sell" : "wait",
       text: advice.sellUsd
-        ? `USD: купівля ФОП ${nowUsd.toFixed(4)} — вище за ${advice.usdRank.toFixed(0)}% історії. Зараз вигідно продавати долар (більше гривень).`
-        : `USD: купівля ФОП ${nowUsd.toFixed(4)} — лише ${advice.usdRank.toFixed(0)}-й перцентиль. Можна почекати вищий курс продажу.`,
+        ? `USD: купівля ФОП ${nowUsd.toFixed(4)} — вище за ${advice.usdRank.toFixed(0)}% днів історії. Зараз вигідно продавати долар (більше гривень).`
+        : `USD: купівля ФОП ${nowUsd.toFixed(4)} — лише ${advice.usdRank.toFixed(0)}-й перцентиль серед днів. Можна почекати вищий курс продажу.`,
     });
   }
 
   if (advice.eurRank != null && nowEur != null) {
+    const beat =
+      advice.eurBeatPct != null
+        ? advice.eurBeatPct
+        : Math.max(0, 100 - advice.eurRank);
     notes.push({
       tone: advice.buyEur ? "buy" : "wait",
       text: advice.buyEur
-        ? `EUR: продаж P24 ${nowEur.toFixed(4)} — дешевше, ніж у ${(100 - advice.eurRank).toFixed(0)}% історії. Зараз вигідно купувати євро.`
-        : `EUR: продаж P24 ${nowEur.toFixed(4)} — дорожче за ${advice.eurRank.toFixed(0)}% історії. Купівля зараз відносно дорога.`,
+        ? `EUR: продаж P24 ${nowEur.toFixed(4)} — дешевше за ${beat.toFixed(0)}% днів історії. Зараз вигідно купувати євро.`
+        : `EUR: продаж P24 ${nowEur.toFixed(4)} — дорожче за ${advice.eurRank.toFixed(0)}% днів історії. Купівля зараз відносно дорога.`,
     });
   }
 

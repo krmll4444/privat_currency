@@ -84,11 +84,13 @@ function rankUsd(rank) {
   return ` (${fmt(rank, 0)}-й перцентиль)`;
 }
 
-function rankEur(rank) {
+function rankEur(rank, beatPct) {
   if (rank == null) return "";
-  return rank <= 30
-    ? ` (дешевше, ніж у ${fmt(100 - rank, 0)}% історії)`
-    : ` (${fmt(rank, 0)}-й перцентиль)`;
+  if (rank <= 30) {
+    const beat = beatPct != null ? beatPct : Math.max(0, 100 - rank);
+    return ` (дешевше за ${fmt(beat, 0)}% днів історії)`;
+  }
+  return ` (${fmt(rank, 0)}-й перцентиль)`;
 }
 
 export function formatAlert(snapshot) {
@@ -111,8 +113,8 @@ export function formatAlert(snapshot) {
     ? `USD ФОП: <b>вигідно продати</b>${rankUsd(sides.usdRank)}`
     : `USD ФОП: не пік продажу${rankUsd(sides.usdRank)}`;
   const eurLine = sides.buyEur
-    ? `EUR картка: <b>вигідно купити</b>${rankEur(sides.eurRank)}`
-    : `EUR картка: поки дорого${rankEur(sides.eurRank)}`;
+    ? `EUR картка: <b>вигідно купити</b>${rankEur(sides.eurRank, sides.eurBeatPct)}`
+    : `EUR картка: поки дорого${rankEur(sides.eurRank, sides.eurBeatPct)}`;
   const dayLine =
     snapshot.dayDelta == null
       ? null

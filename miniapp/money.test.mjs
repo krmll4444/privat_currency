@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { planEurPurchase, percentileRank, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, buildAdviceFile, sideSignals, cashCompare, waitHorizon, dayDeltaPct, daysUntil, insightItems } from "./money.js";
+import { planEurPurchase, percentileRank, shareAbove, toCandles, cutoffMs, sectorKind, favorHistogram, todayAdvice, analyze, applyRankFavorable, dailyEdgeValues, buildAdviceFile, sideSignals, cashCompare, waitHorizon, dayDeltaPct, daysUntil, insightItems } from "./money.js";
 
 test("калькулятор на живих курсах", () => {
   const r = planEurPurchase({
@@ -31,6 +31,50 @@ test("свічки групують тіки", () => {
 
 test("перцентиль: вище = кращий продаж USD", () => {
   assert.equal(percentileRank(5, [1, 2, 3, 4, 5]), 80);
+});
+
+test("shareAbove: нічиї на мінімумі не дають 100%", () => {
+  assert.equal(shareAbove(1, [1, 1, 1, 2, 3]), 40);
+  assert.equal(shareAbove(1, [1]), 0);
+  assert.equal(shareAbove(0, [1, 2, 3]), 100);
+});
+
+test("топ днів рахує денні best edge, не тіки", () => {
+  const rows = [
+    { ts: "2026-09-01T08:00:00Z", spread: { edgePct: -1.8 } },
+    { ts: "2026-09-01T10:00:00Z", spread: { edgePct: -0.5 } }, // best цього дня
+    { ts: "2026-09-01T12:00:00Z", spread: { edgePct: -0.6 } },
+    { ts: "2026-09-02T08:00:00Z", spread: { edgePct: -1.6 } },
+    { ts: "2026-09-03T08:00:00Z", spread: { edgePct: -1.4 } },
+    { ts: "2026-09-04T08:00:00Z", spread: { edgePct: -1.2 } },
+    { ts: "2026-09-05T08:00:00Z", spread: { edgePct: -1.0 } },
+    { ts: "2026-09-08T08:00:00Z", spread: { edgePct: -0.9 } },
+    { ts: "2026-09-09T08:00:00Z", spread: { edgePct: -0.8 } },
+    { ts: "2026-09-10T08:00:00Z", spread: { edgePct: -0.7 } },
+    { ts: "2026-09-11T08:00:00Z", spread: { edgePct: -1.5 } },
+    { ts: "2026-09-12T08:00:00Z", spread: { edgePct: -1.3 } },
+  ];
+  // Багато тіків 01.09 з поганим edge не роздувають топ: денний best = -0.5
+  const mid = applyRankFavorable(
+    { favorable: false, edgePct: -0.55 },
+    rows,
+    10,
+    Date.parse("2026-09-15T08:00:00Z"),
+  );
+  assert.equal(mid.byTopDays, false);
+
+  const top = applyRankFavorable(
+    { favorable: false, edgePct: -0.4 },
+    rows,
+    10,
+    Date.parse("2026-09-15T08:00:00Z"),
+  );
+  assert.equal(top.byTopDays, true);
+
+  const edges = dailyEdgeValues(rows, -0.4, Date.parse("2026-09-15T08:00:00Z"));
+  assert.equal(edges.length, 11); // 10 днів історії + новий
+  // По тіках -0.4 був би топ частіше через 3 точки 01.09; по днях — лише best
+  assert.equal(rows.filter((r) => r.ts.startsWith("2026-09-01")).length, 3);
 });
 
 test("cutoff 90d", () => {
@@ -149,17 +193,64 @@ test("ланцюжок ок не підміняє боки: sell і buy лиша
 });
 
 test("вигідно лише продати USD", () => {
+  const hist = [40, 41, 42, 43, 43.5, 44, 44.5, 45].map((usd, i) => ({
+    business: { USD: { buy: usd } },
+    p24: { EUR: { sale: 50 + i * 0.2 } },
+  }));
   const sides = sideSignals(
     { business: { USD: { buy: 46 } }, p24: { EUR: { sale: 53 } } },
-    [
-      { business: { USD: { buy: 40 } }, p24: { EUR: { sale: 50 } } },
-      { business: { USD: { buy: 41 } }, p24: { EUR: { sale: 51 } } },
-      { business: { USD: { buy: 42 } }, p24: { EUR: { sale: 52 } } },
-      { business: { USD: { buy: 43 } }, p24: { EUR: { sale: 50.5 } } },
-    ],
+    hist,
   );
   assert.equal(sides.sellUsd, true);
   assert.equal(sides.buyEur, false);
+});
+
+test("sideSignals: кілька тіків одного дня = один день (max USD / min EUR)", () => {
+  const sides = sideSignals(
+    {
+      ts: "2026-09-10T18:00:00Z",
+      business: { USD: { buy: 44.5 } },
+      p24: { EUR: { sale: 51 } },
+    },
+    [
+      { ts: "2026-09-01T08:00:00Z", business: { USD: { buy: 40 } }, p24: { EUR: { sale: 52 } } },
+      { ts: "2026-09-01T12:00:00Z", business: { USD: { buy: 45 } }, p24: { EUR: { sale: 50 } } },
+      { ts: "2026-09-02T08:00:00Z", business: { USD: { buy: 41 } }, p24: { EUR: { sale: 51.5 } } },
+      { ts: "2026-09-03T08:00:00Z", business: { USD: { buy: 42 } }, p24: { EUR: { sale: 51.2 } } },
+      { ts: "2026-09-04T08:00:00Z", business: { USD: { buy: 43 } }, p24: { EUR: { sale: 50.8 } } },
+      { ts: "2026-09-05T08:00:00Z", business: { USD: { buy: 43.5 } }, p24: { EUR: { sale: 50.5 } } },
+      { ts: "2026-09-08T08:00:00Z", business: { USD: { buy: 44 } }, p24: { EUR: { sale: 50.2 } } },
+      { ts: "2026-09-09T08:00:00Z", business: { USD: { buy: 44.2 } }, p24: { EUR: { sale: 50.1 } } },
+    ],
+  );
+  // USD 44.5 vs денні max: 45,41,42,43,43.5,44,44.2,(44.5) — не топ без 45
+  assert.ok(sides.usdRank < 90);
+  assert.ok(sides.eurBeatPct != null);
+  assert.ok(sides.eurBeatPct < 100);
+});
+
+test("analyze EUR: дешевше за shareAbove, не 100%-rank", () => {
+  const rows = Array.from({ length: 10 }, (_, i) => ({
+    ts: `2026-09-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
+    business: { USD: { buy: 44 } },
+    p24: { EUR: { sale: 51 } },
+    spread: { edgePct: -1.2, favorable: false },
+  }));
+  // 3 дні на мінімумі 50
+  rows[0].p24.EUR.sale = 50;
+  rows[1].p24.EUR.sale = 50;
+  rows[2].p24.EUR.sale = 50;
+  const notes = analyze(rows, {
+    ts: "2026-09-10T10:00:00Z",
+    business: { USD: { buy: 44 } },
+    p24: { EUR: { sale: 50 } },
+    spread: { favorable: false, edgePct: -1.2, lossPer1000UsdUah: 500 },
+  });
+  const eur = notes.find((n) => n.text.startsWith("EUR:"));
+  assert.ok(eur);
+  // 4 дні на мінімумі 50 (включно з сьогодні), 6 дорожчих → 60%
+  assert.match(eur.text, /дешевше за 60% днів/);
+  assert.doesNotMatch(eur.text, /дешевше за 100%/);
 });
 
 test("картка vs готівка: премія картки", () => {

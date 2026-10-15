@@ -1,5 +1,14 @@
 const HORIZONS = [1, 3, 7];
 
+/** Скільки знаків збігаються з більшістю (нулі ігноруємо). */
+export function signAgreement(signs = []) {
+  const nz = signs.filter((s) => s);
+  if (!nz.length) return 0;
+  const pos = nz.filter((s) => s > 0).length;
+  const neg = nz.length - pos;
+  return Math.max(pos, neg);
+}
+
 function mean(arr) {
   if (!arr.length) return 0;
   return arr.reduce((s, x) => s + x, 0) / arr.length;
@@ -253,7 +262,7 @@ export function forecastValues(points, { stepSec = 86400, companions } = {}) {
     Math.sign(emaF - emaS) || 0,
     Math.sign(delta3) || 0,
   ];
-  const agree = signs.filter((s) => s && s === signs.find((x) => x)).length;
+  const agree = signAgreement(signs);
   const dataScore = clamp(n / 120, 0.15, 1);
   const volScore = clamp(1 / (1 + vol / (Math.abs(last) * 0.01 + 1e-6)), 0.15, 1);
   const agreeScore = agree >= 3 ? 0.85 : agree === 2 ? 0.6 : 0.35;

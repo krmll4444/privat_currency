@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { forecastValues, directionLabel, predictKind } from "./predict.js";
+import { forecastValues, directionLabel, predictKind, signAgreement } from "./predict.js";
 
 function series(start, step, n) {
   return Array.from({ length: n }, (_, i) => ({
@@ -30,6 +30,14 @@ test("мало точок — без предикту", () => {
 test("EUR: вниз = дешевша купівля", () => {
   assert.match(directionLabel("eur", -0.2), /дешевш/i);
   assert.match(directionLabel("usd", 0.2), /вигідніш/i);
+});
+
+test("signAgreement: більшість знаків, не перший ненульовий", () => {
+  assert.equal(signAgreement([1, -1, -1]), 2);
+  assert.equal(signAgreement([-1, 1, 1]), 2);
+  assert.equal(signAgreement([1, 1, 1]), 3);
+  assert.equal(signAgreement([1, 0, -1]), 1);
+  assert.equal(signAgreement([0, 0, 0]), 0);
 });
 
 test("predictKind читає історію snapshot", () => {
