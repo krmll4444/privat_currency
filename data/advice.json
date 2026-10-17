@@ -1,5 +1,5 @@
 {
-  "ts": "2026-10-17T07:58:40.587Z",
+  "ts": "2026-10-17T12:07:00.010Z",
   "status": "do",
   "title": "Вигідно і продати USD, і купити EUR",
   "action": "Обидва боки в історично кращій зоні. Продай USD на ФОП і купи EUR у Приват24. Доплата ≈ 1411 грн на 2000 EUR.",
@@ -31,9 +31,9 @@
   "chainEurPerUsd": 0.87612,
   "marketEurPerUsd": 0.888407,
   "lossPer1000UsdUah": 620.46,
-  "eurUsd": 1.1244,
+  "eurUsd": 1.1242,
   "privatEurUsd": 1.1414,
-  "crossLagPips": 170,
+  "crossLagPips": 172,
   "crossNightWindow": false,
   "crossFollow": "quiet",
   "crossFollowHint": "І крос, і Приват майже стоять.",
